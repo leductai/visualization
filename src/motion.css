@@ -9,13 +9,15 @@
 .stage-panel.stage-3d { height: 526px; background: transparent; border: 0; border-radius: 0; overflow: visible; }
 .stage-3d > .panel-heading { padding: 0 2px; border-bottom: 0; }
 .stage-3d .stage-footer { background: transparent; padding-inline: 2px; }
-.immersive-stage.visual-stage { padding: 0; background: #f0f5f7; overflow-x: hidden; }
-.immersive-stage .stage-caption { padding: 15px 16px 0; margin-bottom: 0; }
-.immersive-stage .secondary-visual { margin: 0 16px; padding-block: 10px; }
-.immersive-stage .ancestor-table { margin: 12px 16px; }
-.immersive-stage .recursion-path { margin: 0; padding: 12px 16px; }
-.immersive-stage .bounds { margin: 6px 16px 16px; background: #e5eef2; }
-.immersive-stage .result-banner { margin: 8px 16px 16px; }
+.immersive-stage.visual-stage { padding: 0; background: #f0f5f7; overflow: hidden; display: flex; flex-direction: column; }
+.immersive-stage .stage-caption { padding: 15px 16px 0; margin-bottom: 0; flex-shrink: 0; }
+.immersive-stage .secondary-visual { margin: 0 16px; padding-block: 10px; flex-shrink: 0; }
+.immersive-stage .ancestor-table { margin: 12px 16px; flex-shrink: 0; overflow-x: auto; }
+.immersive-stage .recursion-path { margin: 0; padding: 12px 16px; flex-shrink: 0; flex-wrap: wrap; gap: 5px; }
+.immersive-stage .bounds { margin: 6px 16px 16px; background: #e5eef2; flex-shrink: 0; }
+.immersive-stage .result-banner { margin: 8px 16px 16px; flex-shrink: 0; max-height: 120px; overflow-y: auto; }
+.immersive-stage .scene-3d, .immersive-stage .scene-loading { flex: 1; min-height: 240px; height: auto; }
+.immersive-stage .primary-visual { flex: 1; min-height: 0; }
 .scene-3d { position: relative; width: 100%; height: 348px; }
 .scene-host { width: 100%; height: 100%; overflow: hidden; }
 .algorithm-canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
@@ -71,6 +73,6 @@
 @keyframes execution-pulse { 50% { box-shadow: 0 0 0 3px #1e9a791a; } }
 @keyframes path-flow { to { stroke-dashoffset: -28; } }
 @keyframes loading-tile { to { transform: translateY(-5px); background: #71bba3; } }
-@media (max-width: 960px) { .workspace-3d { grid-template-columns: minmax(0, 1fr); } .workspace-3d .code-panel { height: 270px; } .stage-panel.stage-3d { height: 530px; } .scene-3d, .scene-loading { height: 365px; } }
-@media (max-width: 720px) { .motion-toggle { margin-left: auto; width: 30px; height: 30px; } .stage-3d > .panel-heading { flex-wrap: wrap; min-height: 56px; height: auto; padding-block: 8px; row-gap: 4px; } .stage-3d .panel-heading > span:first-child { font-size: 10px; } .stage-3d .status { font-size: 9px; } .view-switch button { width: 25px; height: 24px; } .stage-panel.stage-3d { height: 526px; } .scene-3d, .scene-loading { height: 350px; } .scene-tools { right: 9px; top: 9px; } .immersive-stage .stage-caption { font-size: 8px; } .scene-step { left: 12px; font-size: 9px; bottom: 17px; } .scene-playback { position: absolute; display: flex; right: 9px; bottom: 9px; gap: 6px; } .scene-playback .scene-play { background: #06745f; color: #fff; border-color: #06745f; } }
+@media (max-width: 960px) { .workspace-3d { grid-template-columns: minmax(0, 1fr); } .workspace-3d .code-panel { height: 270px; } .stage-panel.stage-3d { height: 530px; } .immersive-stage .scene-3d, .immersive-stage .scene-loading { height: auto; min-height: 250px; } }
+@media (max-width: 720px) { .motion-toggle { margin-left: auto; width: 30px; height: 30px; } .stage-3d > .panel-heading { flex-wrap: wrap; min-height: 56px; height: auto; padding-block: 8px; row-gap: 4px; } .stage-3d .panel-heading > span:first-child { font-size: 10px; } .stage-3d .status { font-size: 9px; } .view-switch button { width: 25px; height: 24px; } .stage-panel.stage-3d { height: 526px; } .immersive-stage .scene-3d, .immersive-stage .scene-loading { height: auto; min-height: 230px; } .scene-tools { right: 9px; top: 9px; } .immersive-stage .stage-caption { font-size: 8px; } .scene-step { left: 12px; font-size: 9px; bottom: 17px; } .scene-playback { position: absolute; display: flex; right: 9px; bottom: 9px; gap: 6px; } .scene-playback .scene-play { background: #06745f; color: #fff; border-color: #06745f; } }
 @media (prefers-reduced-motion: reduce) { .motion-on *, .motion-on *:before, .motion-on *:after { animation: none !important; transition: none !important; } }
