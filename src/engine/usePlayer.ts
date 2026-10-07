@@ -1,0 +1,129 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Algorithm, Detail, SimulationEvent, VisualState, WorkerResponse } from './types';
+import { History } from './history';
+
+type Status = 'ready' | 'running' | 'paused' | 'complete' | 'stopped';
+export function usePlayer(algorithm: Algorithm, preset: number) {
+  const [state, setState] = useState<VisualState>(() => algorithm.initial(algorithm.presets[preset].input));
+  const [event, setEvent] = useState<SimulationEvent>();
+  const [playing, setPlaying] = useState(false), [status, setStatus] = useState<Status>('ready');
+  const [step, setStep] = useState(0), [total, setTotal] = useState(0), [outputCount, setOutputCount] = useState(0);
+  const [speed, setSpeed] = useState(2), [detail, setDetail] = useState<Detail>('easy');
+  const [elapsed, setElapsed] = useState(0);
+  const [warning, setWarning] = useState(''), [version, setVersion] = useState(0), [ready, setReady] = useState(false);
+  const worker = useRef<Worker | null>(null), history = useRef<History | null>(null);
+  const busy = useRef(false), position = useRef(0), length = useRef(0), outputLength = useRef(0);
+  const current = useRef(state), finished = useRef(false), cancelled = useRef(false), generation = useRef(0);
+  const pendingSeek = useRef<number | null>(null);
+  const detailRef = useRef(detail); detailRef.current = detail;
+
+  const applyFrame = useCallback((next: VisualState, nextEvent: SimulationEvent | undefined, index: number, outputs: number) => {
+    current.current = next; position.current = index;
+    setState(next); setEvent(nextEvent); setStep(index); setOutputCount(outputs);
+  }, []);
+
+  useEffect(() => {
+    const token = ++generation.current, h = new History(); history.current = h;
+    const input = algorithm.presets[preset].input, initial = algorithm.initial(input);
+    applyFrame(initial, undefined, 0, 0); length.current = 0; outputLength.current = 0;
+    finished.current = false; cancelled.current = false; busy.current = true; pendingSeek.current = null;
+    setPlaying(false); setStatus('ready'); setTotal(0); setWarning(''); setReady(false); setElapsed(0);
+    const fail = (message: string) => {
+      if (token !== generation.current) return;
+      setWarning(message); setPlaying(false); setStatus('stopped'); cancelled.current = true;
+      worker.current?.terminate(); busy.current = false; setReady(true);
+    };
+    const validation = algorithm.validate(input);
+    if (validation) { fail(validation); return () => { ++generation.current; void h.close(); }; }
+    let w: Worker;
+    try { w = new Worker(new URL('../worker/simulation.worker.ts', import.meta.url), { type: 'module' }); }
+    catch (error) { fail(String(error)); return () => { ++generation.current; void h.close(); }; }
+    worker.current = w;
+    w.postMessage({ type: 'init', id: algorithm.id, input, detail: detailRef.current });
+    void h.open().then(() => {
+      if (token === generation.current && !cancelled.current) { setWarning(h.warning); busy.current = false; setReady(true); }
+    });
+    w.onerror = e => fail(e.message || 'Worker không thể tiếp tục.');
+    w.onmessage = async ({ data }: MessageEvent<WorkerResponse>) => {
+      if (token !== generation.current || cancelled.current) return;
+      if (data.type === 'error') { fail(data.message); return; }
+      try {
+        for (const e of data.events) {
+          const next = { ...current.current, ...e.statePatch };
+          // Output records live in IndexedDB, only the current visual state is retained in React.
+          delete next.outputs;
+          const outputs = outputLength.current + (e.action === 'output' ? 1 : 0), index = length.current + 1;
+          await h.put(index, { event: e, state: next, outputCount: outputs });
+          if (token !== generation.current || cancelled.current) return;
+          length.current = index; outputLength.current = outputs;
+          applyFrame(next, e, index, outputs); setTotal(index);
+          if (e.action === 'complete') { finished.current = true; setPlaying(false); setStatus('complete'); }
+        }
+        if (data.done) { finished.current = true; setPlaying(false); setStatus('complete'); }
+      } catch (error) { fail(error instanceof Error ? error.message : String(error)); }
+      if (token === generation.current) busy.current = false;
+    };
+    return () => { ++generation.current; w.terminate(); void h.close().catch(() => undefined); };
+  }, [algorithm, preset, version, applyFrame]);
+
+  const seek = useCallback(async (index: number) => {
+    if (index < 0 || index > length.current) return;
+    setPlaying(false);
+    if (busy.current) { pendingSeek.current = index; return; }
+    pendingSeek.current = null; busy.current = true; const token = generation.current;
+    try {
+      const frame = index ? await history.current?.get(index) : undefined;
+      if (token !== generation.current) return;
+      if (index && !frame) throw new Error('Không tìm thấy bước trong lịch sử.');
+      applyFrame(frame?.state ?? algorithm.initial(algorithm.presets[preset].input), frame?.event, index, frame?.outputCount ?? 0);
+      setStatus(cancelled.current ? 'stopped' : finished.current && index === length.current ? 'complete' : 'paused');
+    } catch (error) { if (token === generation.current) setWarning(String(error)); }
+    finally { if (token === generation.current) busy.current = false; }
+  }, [algorithm, preset, applyFrame]);
+
+  useEffect(() => {
+    if (!busy.current && pendingSeek.current !== null) void seek(pendingSeek.current);
+  }, [state, step, total, ready, playing, seek]);
+
+  const next = useCallback(async () => {
+    if (busy.current) return;
+    if (position.current < length.current) {
+      busy.current = true; const token = generation.current;
+      try {
+        const frame = await history.current?.get(position.current + 1);
+        if (token !== generation.current) return;
+        if (!frame) throw new Error('Không tìm thấy bước tiếp theo.');
+        applyFrame(frame.state, frame.event, position.current + 1, frame.outputCount);
+        if (position.current === length.current && finished.current) { setPlaying(false); setStatus('complete'); }
+      } catch (error) { if (token === generation.current) { setWarning(String(error)); setPlaying(false); } }
+      finally { if (token === generation.current) busy.current = false; }
+    } else if (!finished.current && !cancelled.current) {
+      busy.current = true;
+      worker.current?.postMessage({ type: 'next', count: 1, detail: detailRef.current });
+      setStatus(currentStatus => currentStatus === 'running' ? 'running' : 'paused');
+    } else { setPlaying(false); setStatus(cancelled.current ? 'stopped' : 'complete'); }
+  }, [applyFrame]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = setInterval(() => void next(), 1000 / speed);
+    return () => clearInterval(timer);
+  }, [playing, speed, next]);
+
+  useEffect(() => {
+    if (!playing) return;
+    let last = performance.now();
+    const timer = setInterval(() => { const now = performance.now(); setElapsed(value => value + now - last); last = now; }, 250);
+    return () => clearInterval(timer);
+  }, [playing]);
+
+  const canNext = ready && (step < total || (!finished.current && !cancelled.current));
+  return { state, event, playing, status, step, total, outputCount, elapsed, speed, setSpeed, detail,
+    setDetail: (value: Detail) => { if (!playing) setDetail(value); }, warning, ready, canNext, next, seek,
+    readOutputs: useCallback((offset: number, count: number) => history.current?.getOutputs(offset, count) ?? Promise.resolve([]), []),
+    runKey: `${algorithm.id}:${preset}:${version}`,
+    reset: () => setVersion(v => v + 1),
+    toggle: () => { if (canNext) { setPlaying(v => !v); setStatus(playing ? 'paused' : 'running'); } },
+    stop: () => { cancelled.current = true; worker.current?.terminate(); busy.current = false; setReady(true); setPlaying(false); setStatus('stopped'); },
+  };
+}

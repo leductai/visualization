@@ -1,0 +1,79 @@
+﻿Cho một ô chữ hình chữ nhật, mỗi ô chứa một ký tự. Người chơi cần tìm xem một từ nào đó có thể được tạo thành bằng cách nối các ký tự liên tiếp trong ô chữ hay không. Hai ký tự được gọi là liên tiếp nếu chúng nằm trong hai ô lân cận nhau theo hàng dọc, hàng ngang hoặc đường chéo.
+
+INPUT
+
+Dòng đầu tiên chứa từ cần tìm
+
+Các dòng tiếp theo trong input có độ dài bằng nhau, mỗi dòng chứa một chuỗi gồm các chữ cái tiếng Anh , đây là các hàng trong ô chữ
+
+Input kết thúc bằng một dòng chỉ chứa dấu .
+
+OUTPUT
+
+Nếu có thể tìm thấy từ đó trong ô chữ, xuất ra “true”, ngược lại xuất ra “false”
+
+VÍ DỤ
+
+Input
+
+Output
+
+ABCCED
+
+ABCE
+
+SFCS
+
+ADEE
+
+.
+
+true
+
+ABCB
+
+ABCE
+
+SFCS
+
+ADEE
+
+.
+
+false
+
+ 
+
+Giải thích:
+
+ 
+
+Ở ví dụ đầu, chuỗi ABCCED có thể được tạo thành bằng cách nối ký tự ở các ô:
+
+A
+
+B
+
+C
+
+E
+
+S
+
+F
+
+C
+
+S
+
+A
+
+D
+
+E
+
+E
+
+ 
+
+Ghi chú: Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm

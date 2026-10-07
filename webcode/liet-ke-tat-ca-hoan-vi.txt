@@ -1,0 +1,50 @@
+﻿Cho một con số nguyên dương n chỉ bao gồm các chữ số trong khoảng từ 1 đến 9. Các chữ số bên trong số này đã được sắp xếp tăng dần. Hỏi nếu như có thể đổi chỗ các chữ số trong số n thì chúng ta sẽ thu được những số gì?
+
+INPUT
+Số nguyên dương n.
+
+OUTPUT
+Tất cả các số có thể thu được bằng cách đổi chỗ các chữ số trong n. Mỗi số ghi trên một hàng. Các số được liệt kê theo thứ tự giảm dần.
+
+VÍ DỤ
+Input	Output
+589
+
+985
+958
+895
+859
+598
+589
+
+4567	
+7654
+7645
+7564
+7546
+7465
+7456
+6754
+6745
+6574
+6547
+6475
+6457
+5764
+5746
+5674
+5647
+5476
+5467
+4765
+4756
+4675
+4657
+4576
+4567
+
+ 
+
+- Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm
+ 
+

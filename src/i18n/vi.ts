@@ -1,0 +1,14 @@
+export const vi = {
+  brand: 'algo.studio', tagline: 'THUẬT TOÁN, TỪNG BƯỚC MỘT', library: 'Thư viện thuật toán',
+  play: 'Chạy', pause: 'Tạm dừng', next: 'Bước tiếp', stop: 'Dừng', reset: 'Làm lại',
+  easy: 'Dễ hiểu', detailed: 'Chi tiết', ready: 'Sẵn sàng khám phá', running: 'Đang thực thi',
+  paused: 'Đã tạm dừng', complete: 'Đã hoàn thành', stopped: 'Đã dừng',
+  stage: 'Không gian trực quan', code: 'Mã thuật toán', console: 'Nhật ký thực thi',
+  view2d: 'Chế độ 2D', view3d: 'Chế độ 3D', viewMode: 'Góc nhìn mô phỏng',
+  cameraControls: 'Điều khiển góc nhìn', resetCamera: 'Đặt lại góc nhìn', zoomIn: 'Phóng to', zoomOut: 'Thu nhỏ', rotateScene: 'Tự xoay cảnh',
+  enableMotion: 'Bật chuyển động', disableMotion: 'Tắt chuyển động', reducedMotion: 'Giảm chuyển động theo hệ thống',
+  sceneReady: 'Sẵn sàng', sceneData: 'Dữ liệu mô hình 3D', step: 'Bước', loadingScene: 'Đang tải mô hình',
+  scenePlayback: 'Thực thi trong cảnh', sceneNext: 'Bước tiếp trong cảnh', scenePlay: 'Chạy trong cảnh', scenePause: 'Tạm dừng trong cảnh',
+  graphicsFallback: 'Không mở được đồ họa 3D trên thiết bị này. Đã chuyển về 2D.',
+  actions: { check: 'Kiểm tra', accept: 'Chọn', reject: 'Loại', update: 'Cập nhật', undo: 'Hoàn tác', output: 'Xuất', complete: 'Hoàn thành' },
+};

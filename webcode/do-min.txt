@@ -1,0 +1,220 @@
+﻿
+Trò chơi Minesweeper là một trò chơi nổi tiếng ra mắt lần đầu năm 1989. Trò chơi là một bảng chữ nhật 
+N
+×
+M
+N×M ô, một số ô trong bảng có thể là mìn, một số ô là ô an toàn. Nhiệm vụ của người chơi là tìm và đánh dấu tất cả các ô có mìn, nếu người chơi đụng phải ô có mìn thì sẽ phán là thua, nếu tìm ra toàn bộ mìn và chính xác thì chiến thắng.
+
+Cũng là ngày cuối tuần, nhưng câu đố "Hidden words" đã được Meow chơi phá đảo. Vì quá chán nên cô nàng lôi Minesweeper ra chơi. Sau khi chơi quá 7749 lần, cô đã thành bậc thầy của trò chơi, có thể chiến thắng bất cứ chơi kiểu gì ... . Cô cảm thấy rất tự hào về thành tựu này của mình, nên sẵn tiện viết một câu đố để đố mọi người, nội dung câu đố có thể tóm tắt lại là:
+
+Cho một ma trận A kích thước 
+N
+×
+M
+N×M, 
+A
+[
+x
+]
+[
+y
+]
+=
+k
+A[x][y]=k với ý nghĩa là có 
+k
+k quả mìn nằm kề với ô 
+(
+x
+,
+y
+)
+(x,y)(Lưu ý: hai ô 
+(
+x
+1
+,
+y
+1
+)
+(x 
+1
+​
+ ,y 
+1
+​
+ ) và 
+(
+x
+2
+,
+y
+2
+)
+(x 
+2
+​
+ ,y 
+2
+​
+ ) gọi là kề khi 
+∣
+x
+1
+−
+x
+2
+∣
++
+∣
+y
+1
+−
+y
+2
+∣
+=
+1
+∣x 
+1
+​
+ −x 
+2
+​
+ ∣+∣y 
+1
+​
+ −y 
+2
+​
+ ∣=1)
+Yêu cầu hãy xây dựng mảng B kích thước 
+N
+×
+M
+N×M từ mảng A. 
+B
+[
+x
+]
+[
+y
+]
+=
+1
+B[x][y]=1 nếu có mìn tại ô 
+(
+x
+,
+y
+)
+(x,y), ngược lại 
+B
+[
+x
+]
+[
+y
+]
+=
+0
+B[x][y]=0. (xem ví dụ để hiểu rõ hơn)
+Input:
+
+Dòng đầu gồm 2 số nguyên dương N, M là kích thước của bảng
+N dòng tiếp theo, mỗi dòng gồm M số nguyên, mỗi số nguyên có giá trị từ 0 đến 4 thể hiện số quả mìn nằm kề với ô 
+(
+x
+,
+y
+)
+(x,y) tương ứng
+Output:
+
+Ghi ra gồm N dòng, mỗi dòng gồm M ký tự thể hiện ô có mìn là '1' và ô không có mìn là '0'. Nếu có nhiều đáp án thỏa mãn, có thể ghi bất kỳ một đáp án
+Dữ liệu đảm bảo luôn tồn tại đáp án 
+Constrains:
+
+1
+≤
+N
+,
+M
+≤
+40
+1≤N,M≤40
+Example:
+
+Input
+4 4
+
+2 0 1 1
+
+0 2 1 0
+
+1 1 1 2
+
+1 1 2 1
+
+Output 
+0 1 0 0
+
+1 0 0 1
+
+0 0 0 0
+
+0 1 1 1
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Input
+2 2
+
+2 0 
+
+0 2 
+
+Output
+0 1
+
+1 0 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 

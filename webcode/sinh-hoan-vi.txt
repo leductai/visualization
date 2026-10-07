@@ -1,0 +1,30 @@
+﻿MÔ TẢ BÀI TOÁN
+
+Cho số nguyên dương n, dãy sinh n! hoán vị của n số nguyên dương đầu tiên.
+
+Input:
+
+ - một số nguyên dương n. (1 ≤ n ≤ 9)
+
+Output
+
+-  n! dòng, mỗi dòng chứa n số nguyên dương là danh sách các hoán vị của n số nguyên dương đầu tiên, các số cách nhau bởi 1 khoảng trắng
+
+Ví dụ:
+
+Input	Output
+3	1 2 3 
+1 3 2 
+2 1 3 
+2 3 1 
+3 1 2 
+3 2 1 
+ 	 
+ 
+
+CẢNH BÁO:
+
+- Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm
+- Vì các problem này chỉ ở mức dễ nên hoàn toàn SV có thể tự code được, việc cứ đi tìm code có sẵn chỉ "giết chết" tư duy và kỹ năng lập trình của mình.
+
+- Quay lui có nhiều mô hình cài đặt, trên lớp GV chỉ mới giới thiệu 1 mô hình. KHUYẾN NGHỊ SV CODE THEO MÔ HÌNH NÀY CHO THÀNH THỤC

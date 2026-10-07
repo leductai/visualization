@@ -1,0 +1,84 @@
+﻿Môn học X có n cột điểm. Hệ số của mỗi cột điểm đã được phòng đào tạo quy định trước. Tuy nhiên do không muốn làm đủ n bài tập để lấy điểm, sinh viên lớp X đã thỏa thuận với giảng viên chỉ làm một đồ án duy nhất lấy điểm cho cả môn. Sau khi chấm điểm đồ án xong bây giờ giảng viên phải nhập đủ n cột điểm cho phòng đào tạo nhưng vẫn phải đảm bảo khi chia trung bình môn học n cột điểm này sẽ vẫn bằng với i điểm, là điểm đồ án của sinh viên.
+
+Hãy phát sinh tất cả cách ghi điểm giảng viên có thể ghi cho sinh viên đó.
+
+Điểm mỗi cột không được phép là điểm liệt (tức 0 điểm) và sẽ được làm tròn đến 0.25, điểm trung bình môn được làm tròn đến 0.1
+
+
+INPUT
+
+Dòng đầu tiên chứa số nguyên dương n, n<10.
+
+n dòng tiếp theo mỗi dòng chứa một số nguyên dương đây lần lượt là các hệ số của cột điểm. Hệ số của một cột là tỷ lệ % của cột đó trong điểm trong bình môn học
+
+Dòng cuối cùng của input chứa số i, là điểm số trung bình môn của sinh viên.
+
+ 
+
+OUTPUT
+
+Ứng với mỗi cách ghi điểm cuả giảng viên xuất ra trên một hàng các điểm số của mỗi cột điểm, cách nhau bởi khoảng trắng.
+
+ 
+
+VÍ DỤ
+
+Input
+
+Output
+
+3
+
+20
+
+30
+
+50
+
+9.5
+
+7.25 10 10
+7.5 10 10
+7.75 9.75 10
+8 9.5 10
+8 9.75 10
+8 10 9.75
+8.25 9.5 10
+8.25 9.75 9.75
+8.25 10 9.75
+8.5 9.25 10
+8.5 9.75 9.75
+8.5 10 9.5
+8.75 9 10
+8.75 9.25 10
+8.75 9.5 9.75
+8.75 10 9.5
+9 9 10
+9 9.25 9.75
+9 9.5 9.75
+9 9.75 9.5
+9.25 8.75 10
+9.25 9.25 9.75
+9.25 9.5 9.5
+9.25 9.75 9.5
+9.25 10 9.25
+9.5 8.5 10
+9.5 8.75 10
+9.5 9 9.75
+9.5 9.5 9.5
+9.5 9.75 9.25
+9.5 10 9.25
+9.75 8.5 10
+9.75 8.75 9.75
+9.75 9 9.75
+9.75 9.25 9.5
+9.75 9.75 9.25
+9.75 10 9
+10 8.25 10
+10 8.75 9.75
+10 9 9.5
+10 9.25 9.5
+10 9.5 9.25
+10 10 9
+Ghi chú: Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm
+ 

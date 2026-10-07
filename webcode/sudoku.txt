@@ -1,0 +1,28 @@
+﻿MÔ TẢ BÀI TOÁN
+
+Sudoku là một trò chơi phổ biến rộng rãi dùng để giết thời gian và rèn luyện trí tuệ. Trong bài này, ta sẽ xét đến trường hợp Sudoku 9 × 9
+
+
+
+Một Sudoku kích thước 9 × 9 được chia làm 9 hình vuông cơ sở, thu được bằng cách cắt đường cắt mỗi chiều thành ba phần bằng nhau. Một Sudoku được xem là hợp lệ nếu mỗi khi ta xét một hàng, một cột, hoặc một hình vuông cơ sở, ta sẽ thu được một hoán vị của 9 số tự nhiên đầu tiên. Cho một Sudoku trong đó một vài ô còn trống chưa được điền. Hãy điền các số vào các ô trống đó sao cho tạo được một Sudoku hợp lệ.
+
+Input
+Gồm một ma trận có kích thước 9×9, trong đó các ô được điền sẵn sẽ mang số tương ứng, các ô chưa được điền sẽ mang ký tự X. Input đảm bảo không có quá 5 ô trống chưa được điền.
+
+Output
+Gồm một ma trận có kích thước 9 × 9, thể hiện một Sudoku hợp lệ với dữ liệu mà đề bài cho. Nếu có nhiều trường hợp thỏa mãn, hãy xuất ra một trường hợp bất kỳ
+
+ 
+
+Ví dụ:
+
+
+ 
+
+YÊU CẦU: DÙ CÓ NHIỀU CÁCH GIẢI NHƯNG GV YÊU CẦU DÙNG KỸ THUẬT BACKTRACKING, KỸ THUẬT KHÁC KHÔNG TÍNH ĐIỂM
+
+ 
+
+ 
+
+ 

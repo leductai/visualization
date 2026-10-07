@@ -1,0 +1,23 @@
+﻿Cho một chuỗi s, hãy tìm tất cả các cách chia chuỗi s thành các chuỗi con sao cho tất cả chuỗi con đều là chuỗi đối xứng (palindrome)
+
+INPUT
+
+Chuỗi s không chứa khoảng trắng, không quá 100 ký tự.
+
+OUTPUT
+
+Với mỗi cách chia chuỗi s thành những chuỗi con, xuất ra các chuỗi con này trên cùng một dòng cách nhau bởi khoảng trắng. Các chuỗi con phải được xuất theo đúng thứ tự chúng xuất hiện trong chuỗi s. Thứ tự xuất các cách chia là không quan trọng, hệ thống chấm được hết)
+
+VÍ DỤ
+
+Input
+
+Output
+
+aab
+
+aa b
+
+a a b
+
+ 
