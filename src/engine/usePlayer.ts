@@ -3,8 +3,9 @@ import type { Algorithm, Detail, SimulationEvent, VisualState, WorkerResponse } 
 import { History } from './history';
 
 type Status = 'ready' | 'running' | 'paused' | 'complete' | 'stopped';
-export function usePlayer(algorithm: Algorithm, preset: number) {
-  const [state, setState] = useState<VisualState>(() => algorithm.initial(algorithm.presets[preset].input));
+export function usePlayer(algorithm: Algorithm, preset: number, customInput: any | null = null) {
+  const resolve = () => customInput ?? algorithm.presets[preset].input;
+  const [state, setState] = useState<VisualState>(() => algorithm.initial(resolve()));
   const [event, setEvent] = useState<SimulationEvent>();
   const [playing, setPlaying] = useState(false), [status, setStatus] = useState<Status>('ready');
   const [step, setStep] = useState(0), [total, setTotal] = useState(0), [outputCount, setOutputCount] = useState(0);
@@ -15,6 +16,7 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
   const busy = useRef(false), position = useRef(0), length = useRef(0), outputLength = useRef(0);
   const current = useRef(state), finished = useRef(false), cancelled = useRef(false), generation = useRef(0);
   const pendingSeek = useRef<number | null>(null);
+  const prefetching = useRef(false);
   const detailRef = useRef(detail); detailRef.current = detail;
 
   const applyFrame = useCallback((next: VisualState, nextEvent: SimulationEvent | undefined, index: number, outputs: number) => {
@@ -24,14 +26,14 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
 
   useEffect(() => {
     const token = ++generation.current, h = new History(); history.current = h;
-    const input = algorithm.presets[preset].input, initial = algorithm.initial(input);
+    const input = resolve(), initial = algorithm.initial(input);
     applyFrame(initial, undefined, 0, 0); length.current = 0; outputLength.current = 0;
     finished.current = false; cancelled.current = false; busy.current = true; pendingSeek.current = null;
     setPlaying(false); setStatus('ready'); setTotal(0); setWarning(''); setReady(false); setElapsed(0);
     const fail = (message: string) => {
       if (token !== generation.current) return;
       setWarning(message); setPlaying(false); setStatus('stopped'); cancelled.current = true;
-      worker.current?.terminate(); busy.current = false; setReady(true);
+      worker.current?.terminate(); busy.current = false; prefetching.current = false; setReady(true);
     };
     const validation = algorithm.validate(input);
     if (validation) { fail(validation); return () => { ++generation.current; void h.close(); }; }
@@ -48,6 +50,23 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
       if (token !== generation.current || cancelled.current) return;
       if (data.type === 'error') { fail(data.message); return; }
       try {
+        if (prefetching.current) {
+          prefetching.current = false;
+          // Fast-forward: persist every remaining frame but do not render them.
+          for (const e of data.events) {
+            const next = { ...current.current, ...e.statePatch };
+            delete next.outputs;
+            const outputs = outputLength.current + (e.action === 'output' ? 1 : 0), index = length.current + 1;
+            await h.put(index, { event: e, state: next, outputCount: outputs });
+            if (token !== generation.current || cancelled.current) return;
+            length.current = index; outputLength.current = outputs;
+          }
+          finished.current = data.done; setStatus('running');
+          applyFrame(algorithm.initial(resolve()), undefined, 0, 0);
+          setTotal(length.current);
+          busy.current = false; setReady(true);
+          return;
+        }
         for (const e of data.events) {
           const next = { ...current.current, ...e.statePatch };
           // Output records live in IndexedDB, only the current visual state is retained in React.
@@ -64,7 +83,7 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
       if (token === generation.current) busy.current = false;
     };
     return () => { ++generation.current; w.terminate(); void h.close().catch(() => undefined); };
-  }, [algorithm, preset, version, applyFrame]);
+  }, [algorithm, preset, customInput, version, applyFrame]);
 
   const seek = useCallback(async (index: number) => {
     if (index < 0 || index > length.current) return;
@@ -75,7 +94,7 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
       const frame = index ? await history.current?.get(index) : undefined;
       if (token !== generation.current) return;
       if (index && !frame) throw new Error('Không tìm thấy bước trong lịch sử.');
-      applyFrame(frame?.state ?? algorithm.initial(algorithm.presets[preset].input), frame?.event, index, frame?.outputCount ?? 0);
+      applyFrame(frame?.state ?? algorithm.initial(resolve()), frame?.event, index, frame?.outputCount ?? 0);
       setStatus(cancelled.current ? 'stopped' : finished.current && index === length.current ? 'complete' : 'paused');
     } catch (error) { if (token === generation.current) setWarning(String(error)); }
     finally { if (token === generation.current) busy.current = false; }
@@ -121,9 +140,18 @@ export function usePlayer(algorithm: Algorithm, preset: number) {
   return { state, event, playing, status, step, total, outputCount, elapsed, speed, setSpeed, detail,
     setDetail: (value: Detail) => { if (!playing) setDetail(value); }, warning, ready, canNext, next, seek,
     readOutputs: useCallback((offset: number, count: number) => history.current?.getOutputs(offset, count) ?? Promise.resolve([]), []),
-    runKey: `${algorithm.id}:${preset}:${version}`,
+    runKey: `${algorithm.id}:${preset}:${version}:${customInput ? 'custom' : ''}`,
     reset: () => setVersion(v => v + 1),
-    toggle: () => { if (canNext) { setPlaying(v => !v); setStatus(playing ? 'paused' : 'running'); } },
+    toggle: () => {
+      if (!canNext) return;
+      if (!finished.current && length.current === 0 && !prefetching.current && !cancelled.current) {
+        prefetching.current = true; busy.current = true; setStatus('running');
+        worker.current?.postMessage({ type: 'prefetch', detail: detailRef.current });
+        setPlaying(true);
+      } else {
+        setPlaying(v => !v); setStatus(playing ? 'paused' : 'running');
+      }
+    },
     stop: () => { cancelled.current = true; worker.current?.terminate(); busy.current = false; setReady(true); setPlaying(false); setStatus('stopped'); },
   };
 }

@@ -156,6 +156,56 @@ describe('DP and data structures', () => {
   });
 });
 
+describe('custom input parsers', () => {
+  const samples: Record<string, string> = {
+    'sinh-hoan-vi': '3',
+    'tro-choi-ghep-chu': 'CAT\nCAT\nXXX\nXXX',
+    'liet-ke-tat-ca-hoan-vi': '112',
+    'do-min': '3 3\n1 1 1\n1 2 1\n1 1 1',
+    'tinh-diem-mon-hoc': '2\n50 50\n8',
+    'dia-chi-ip': '25525511135',
+    'tach-chuoi-con-doi-xung': 'aab',
+    sudoku: '53XX7XXXX\n6XX195XXX\nX98XXXX6X\n8XXX6XXX3\n4XX8X3XX1\n7XXX2XXX6\nX6XXXX28X\nXXX419XX5\nXXXX8XX79',
+    truyvantong: '5 3\n3 1 4 1 5\n1 3\n2 5\n4 4',
+    tiem_sach: '4 10\n4 8 5 3\n5 12 8 1',
+    rut_bai_trung_thuong: 'kitten sitting',
+    nguoi_giao_com: '7 3\n1 2\n1 3\n2 4\n2 5\n3 6\n3 7\n4 7\n2 5\n6 6',
+    duong_di_an_toan: '3\n...\n...\n...',
+    do_an: '5\n1 3 5\n2 5 6\n4 6 5\n6 7 4\n7 9 8',
+    daycontangdainhat: '6\n3 1 2 5 4 6',
+    daicontangdainhat2: '6\n3 1 2 5 4 6',
+  };
+  it('every module parses the documented stdin format', () => {
+    for (const a of algorithms) {
+      const raw = samples[a.id];
+      expect(raw, `thiếu mẫu input cho ${a.id}`).toBeTruthy();
+      const parsed = a.parseInput(raw);
+      expect(a.validate(parsed), `${a.id} parse không hợp lệ`).toBeNull();
+    }
+  });
+  it('rejects malformed input with a Vietnamese message', () => {
+    expect(() => findAlgorithm('sinh-hoan-vi').parseInput('')).toThrow();
+    expect(() => findAlgorithm('sinh-hoan-vi').parseInput('3 4')).toThrow();
+    expect(() => findAlgorithm('dia-chi-ip').parseInput('abc')).toThrow();
+    expect(() => findAlgorithm('sudoku').parseInput('1 2 3')).toThrow();
+    expect(() => findAlgorithm('tiem_sach').parseInput('2 5\n1')).toThrow();
+  });
+  it('custom parsed input simulates to completion', () => {
+    const a = findAlgorithm('truyvantong'), parsed = a.parseInput(samples.truyvantong);
+    const outputs: string[] = []; let done = false;
+    for (const e of a.simulate(parsed)) { if (e.action === 'output') outputs.push(...(e.statePatch.outputs ?? [])); if (e.action === 'complete') done = true; }
+    expect(done).toBe(true); expect(outputs).toEqual(['8', '11', '1']);
+  });
+  it('every module randomizes to a valid, parseable input', () => {
+    for (const a of algorithms) for (let attempt = 0; attempt < 25; attempt++) {
+      const raw = a.randomInput();
+      expect(typeof raw).toBe('string'); expect(raw.trim().length).toBeGreaterThan(0);
+      const parsed = a.parseInput(raw);
+      expect(a.validate(parsed), `${a.id} random không hợp lệ: ${raw}`).toBeNull();
+    }
+  }, 60000);
+});
+
 describe('lazy worker runner', () => {
   it('continues lazily and can change detail without resetting', () => {
     const a = findAlgorithm('sinh-hoan-vi'), runner = new SimulationRunner(a.simulate({ n: 8 }));

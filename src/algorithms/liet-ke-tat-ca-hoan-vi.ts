@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, need } from './_shared';
 import source from '../../webcode/liet-ke-tat-ca-hoan-vi.cpp?raw';
 
 function* repeatedPermutations({ digits }: { digits: string }): Generator<SimulationEvent> {
@@ -26,5 +26,7 @@ function* repeatedPermutations({ digits }: { digits: string }): Generator<Simula
 }
 
 export const lietKeTatCaHoanVi: Algorithm = {
-  id: 'liet-ke-tat-ca-hoan-vi', title: 'Hoán vị có chữ số lặp', category: 'Quay lui', tags: ['Tần suất', 'Giảm dần'], complexity: 'O(n·P)', description: 'Liệt kê các hoán vị phân biệt', goal: 'Bộ đếm giúp tránh sinh kết quả trùng nhau.', inputFormat: 'Chuỗi chữ số, tối đa 20 ký tự.', note: 'C++ chỉ thử 9..1. Đầu vào chứa 0 sẽ không có kết quả.', source, pseudocode: ['Nếu viTri == doDai: inKetQua()', 'Thử chuSo = 9..1 còn xuất hiện', 'Gán ketQua; giảm bộ đếm', 'quayLui(viTri + 1)', 'Khôi phục bộ đếm', 'Kết thúc duyệt'], presets: [preset('112', { digits: '112' }, '3 hoán vị phân biệt'), preset('909', { digits: '909' }, 'Không có kết quả theo C++')], kind: 'array', validate: i => typeof i?.digits === 'string' && /^\d{1,20}$/.test(i.digits) ? null : 'Cần 1..20 chữ số.', initial: i => ({ values: Array(i.digits.length).fill(''), secondary: Array.from({ length: 9 }, (_, j) => [...i.digits].filter(x => x === String(j + 1)).length), secondaryLabel: 'soLanXuatHien[1..9]' }), simulate: repeatedPermutations,
+  id: 'liet-ke-tat-ca-hoan-vi', title: 'Hoán vị có chữ số lặp', category: 'Quay lui', tags: ['Tần suất', 'Giảm dần'], complexity: 'O(n·P)', description: 'Liệt kê các hoán vị phân biệt', goal: 'Bộ đếm giúp tránh sinh kết quả trùng nhau.', inputFormat: 'Chuỗi chữ số, tối đa 20 ký tự.', note: 'C++ chỉ thử 9..1. Đầu vào chứa 0 sẽ không có kết quả.', source, pseudocode: ['Nếu viTri == doDai: inKetQua()', 'Thử chuSo = 9..1 còn xuất hiện', 'Gán ketQua; giảm bộ đếm', 'quayLui(viTri + 1)', 'Khôi phục bộ đếm', 'Kết thúc duyệt'], presets: [preset('112', { digits: '112' }, '3 hoán vị phân biệt'), preset('909', { digits: '909' }, 'Không có kết quả theo C++')], example: `112`, kind: 'array', validate: i => typeof i?.digits === 'string' && /^\d{1,20}$/.test(i.digits) ? null : 'Cần 1..20 chữ số.', initial: i => ({ values: Array(i.digits.length).fill(''), secondary: Array.from({ length: 9 }, (_, j) => [...i.digits].filter(x => x === String(j + 1)).length), secondaryLabel: 'soLanXuatHien[1..9]' }), simulate: repeatedPermutations,
+  parseInput: raw => { const t = tokens(raw); need(t.length === 1, 'Cần đúng một chuỗi chữ số.'); const digits = t[0]; need(/^\d+$/.test(digits), 'Chỉ chứa chữ số.'); return { digits }; },
+  randomInput: () => randomDigits(ri(2, 6)),
 };

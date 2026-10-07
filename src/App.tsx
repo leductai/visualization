@@ -49,8 +49,19 @@ export default function App() {
   const { motion, reduced, toggleMotion } = useMotion();
   const changeMode = (value: '2d' | '3d') => { setMode(value); setGraphicsWarning(''); try { localStorage.setItem('algo-view', value); } catch { /* The view still works without persistent preferences. */ } };
   const graphicsFallback = () => { setMode('2d'); setGraphicsWarning(vi.graphicsFallback); };
-  const player = usePlayer(algorithm, preset);
-  const choose = (next: Algorithm) => { setAlgorithm(next); setPreset(0); setNavOpen(false); window.location.hash = next.id; };
+  const [customRaw, setCustomRaw] = useState(''), [customError, setCustomError] = useState(''), [customInput, setCustomInput] = useState<any | null>(null);
+  const choose = (next: Algorithm) => { setAlgorithm(next); setPreset(0); setNavOpen(false); window.location.hash = next.id; setCustomInput(null); setCustomRaw(''); setCustomError(''); };
+  const applyCustom = (raw = customRaw) => {
+    try {
+      const parsed = algorithm.parseInput(raw);
+      const err = algorithm.validate(parsed);
+      if (err) { setCustomError(err); return; }
+      setCustomInput(parsed); setCustomError(''); setCustomRaw(raw);
+    } catch (e) { setCustomError(e instanceof Error ? e.message : String(e)); }
+  };
+  const applyRandom = () => applyCustom(algorithm.randomInput());
+  const resetCustom = () => { setCustomInput(null); setCustomRaw(''); setCustomError(''); };
+  const player = usePlayer(algorithm, preset, customInput);
   useEffect(() => {
     const onHash = () => { const next = findAlgorithm(window.location.hash.slice(1)); setAlgorithm(current => { if (current.id !== next.id) setPreset(0); return next; }); };
     window.addEventListener('hashchange', onHash); return () => window.removeEventListener('hashchange', onHash);
@@ -63,12 +74,18 @@ export default function App() {
       <div className="content"><section className="intro" key={algorithm.id}><div><p className="kicker">BÀI TOÁN {String(algorithms.indexOf(algorithm) + 1).padStart(2, '0')} / 16</p><h2>{algorithm.description}</h2><p className="goal">{algorithm.goal}</p><div className="tags">{algorithm.tags.map(tag => <span key={tag}>{tag}</span>)}<span className="complexity">{algorithm.complexity}</span></div></div>
         <div className="preset-box"><label htmlFor="preset">ĐẦU VÀO MẪU</label><select id="preset" value={preset} onChange={e => setPreset(Number(e.target.value))}>{algorithm.presets.map((p, i) => <option value={i} key={p.name}>{p.name}</option>)}</select><small>{algorithm.presets[preset].summary}</small></div>
       </section>
-      <details className="input-detail"><summary>Dữ liệu đầu vào</summary><p>{algorithm.inputFormat}</p><pre>{JSON.stringify(algorithm.presets[preset].input, null, 2)}</pre></details>
+      <details className="input-detail"><summary>Dữ liệu đầu vào</summary><p>{algorithm.inputFormat}</p><pre>{JSON.stringify(customInput ?? algorithm.presets[preset].input, null, 2)}</pre></details>
+      <details className="input-detail custom-input"><summary>Nhập dữ liệu tùy chỉnh (giống đề bài)</summary>
+        <textarea aria-label="Nhập dữ liệu" placeholder={`Ví dụ đầu vào của bài này:\n${algorithm.example}`} value={customRaw} onChange={e => setCustomRaw(e.target.value)} rows={8}/>
+        <div className="custom-actions"><button className="step-button" onClick={() => applyCustom()}>Áp dụng</button><button className="step-button random-button" onClick={applyRandom}>🎲 Ngẫu nhiên</button><button className="icon-button" onClick={resetCustom} title="Đặt lại" aria-label="Đặt lại input">↺</button></div>
+        {customError && <div className="warning" role="alert">{customError}</div>}
+        {customInput && <div className="custom-applied">Đã áp dụng input tùy chỉnh.</div>}
+      </details>
       {algorithm.note && <p className="algorithm-note">{algorithm.note}</p>}
       <section className={`workspace ${mode === '3d' ? 'workspace-3d' : ''}`}><section className={`stage-panel ${mode === '3d' ? 'stage-3d' : ''}`}><div className="panel-heading"><span><Layers3 size={16}/> {vi.stage}</span><div className="view-switch" role="group" aria-label={vi.viewMode}><button aria-label={vi.view2d} title={vi.view2d} data-tooltip={vi.view2d} aria-pressed={mode === '2d'} onClick={() => changeMode('2d')}><Grid2X2 size={15}/></button><button aria-label={vi.view3d} title={vi.view3d} data-tooltip={vi.view3d} aria-pressed={mode === '3d'} onClick={() => changeMode('3d')}><Box size={16}/></button></div><span className={`status status-${player.status}`}><i/>{status}</span></div><VisualStage algorithm={algorithm} state={player.state} mode={mode} motion={motion} step={player.step} action={player.event?.action} runKey={player.runKey} onFallback={graphicsFallback} playback={player}/><div className="stage-footer"><div className="legend"><span className="legend-active">Đang xét</span><span className="legend-marked">Liên quan</span><span className="legend-path">Đường đi</span></div><div className="segmented" role="group" aria-label="Mức độ chi tiết"><button disabled={player.playing} aria-pressed={player.detail === 'easy'} className={player.detail === 'easy' ? 'on' : ''} onClick={() => player.setDetail('easy')}>{vi.easy}</button><button disabled={player.playing} aria-pressed={player.detail === 'detailed'} className={player.detail === 'detailed' ? 'on' : ''} onClick={() => player.setDetail('detailed')}>{vi.detailed}</button></div></div></section>
         <CodePanel algorithm={algorithm} line={player.event?.line} cppLine={player.event?.cppLine}/>
       </section>
-      <section className="console"><div className="panel-heading"><span><span className="console-icon">›_</span> {vi.console}</span><span className="step-count">BƯỚC {player.step.toLocaleString('vi-VN')} / {player.total.toLocaleString('vi-VN')}</span></div><div className="console-body" key={`${player.runKey}:${player.step}`}><span className={`action-pill action-${player.event?.action ?? 'update'}`}>{player.event ? vi.actions[player.event.action] : 'Sẵn sàng'}</span><p aria-live="polite">{player.event?.explanation ?? algorithm.presets[preset].summary}</p></div>
+      <section className="console"><div className="panel-heading"><span><span className="console-icon">›_</span> {vi.console}</span><span className="step-count">BƯỚC {player.step.toLocaleString('vi-VN')} / {player.total.toLocaleString('vi-VN')}</span></div><div className="console-body" key={`${player.runKey}:${player.step}`}><span className={`action-pill action-${player.event?.action ?? 'update'}`}>{player.event ? vi.actions[player.event.action] : 'Sẵn sàng'}</span><p aria-live="polite">{player.event?.explanation ?? (customInput ? 'Đang dùng input tùy chỉnh. Nhấn Bước hoặc Chạy để bắt đầu.' : algorithm.presets[preset].summary)}</p></div>
         {player.state.variables && <div className="variables">{Object.entries(player.state.variables).map(([key, value]) => <span key={key}><b>{key}</b><code>{String(value)}</code></span>)}</div>}
       </section>
       <div className="timeline-controls"><button className="icon-button" disabled={!player.step} onClick={() => void player.seek(player.step - 1)} aria-label="Bước trước" title="Bước trước"><SkipBack size={17}/></button><input aria-label="Lịch sử thực thi" type="range" min={0} max={Math.max(1, player.total)} value={player.step} disabled={!player.total} onChange={e => void player.seek(Number(e.target.value))}/><span>{player.step} / {player.total}</span></div>

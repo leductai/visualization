@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset, sequenceValidation } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, sequenceValidation, tokens, need } from './_shared';
 import source from '../../webcode2/daycontangdainhat.cpp?raw';
 
 type Sequence = { values: number[] };
@@ -30,5 +30,8 @@ function* fenwickLIS({ values }: Sequence): Generator<SimulationEvent> {
 }
 
 export const daycontangdainhat: Algorithm = {
-  id: 'daycontangdainhat', title: 'LIS với Fenwick', category: 'Cấu trúc dữ liệu', tags: ['Nén tọa độ', 'Fenwick tree'], complexity: 'O(n·log n)', description: 'Độ dài dãy con tăng dài nhất', goal: 'Truy vấn hạng nhỏ hơn để giữ tính tăng nghiêm ngặt.', inputFormat: 'Dãy số nguyên.', source, pseudocode: ['Sắp xếp và nén các giá trị thành hạng', 'doDai = timMax(hang−1) + 1', 'Cập nhật cực đại Fenwick từ hang trở lên', 'In độ dài lớn nhất'], presets: [preset('Dãy hỗn hợp', { values: [3, 1, 2, 5, 4, 6] }, 'LIS dài 4'), preset('Các giá trị bằng nhau', { values: [2, 2, 2, 2] }, 'Tăng nghiêm ngặt · LIS dài 1'), preset('Dãy rỗng', { values: [] }, 'LIS dài 0')], kind: 'array', validate: sequenceValidation, initial: i => ({ values: i.values, secondary: Array(new Set(i.values).size).fill(0), secondaryLabel: 'Fenwick' }), simulate: fenwickLIS,
+  id: 'daycontangdainhat', title: 'LIS với Fenwick', category: 'Cấu trúc dữ liệu', tags: ['Nén tọa độ', 'Fenwick tree'], complexity: 'O(n·log n)', description: 'Độ dài dãy con tăng dài nhất', goal: 'Truy vấn hạng nhỏ hơn để giữ tính tăng nghiêm ngặt.', inputFormat: 'Dãy số nguyên.', source, pseudocode: ['Sắp xếp và nén các giá trị thành hạng', 'doDai = timMax(hang−1) + 1', 'Cập nhật cực đại Fenwick từ hang trở lên', 'In độ dài lớn nhất'], presets: [preset('Dãy hỗn hợp', { values: [3, 1, 2, 5, 4, 6] }, 'LIS dài 4'), preset('Các giá trị bằng nhau', { values: [2, 2, 2, 2] }, 'Tăng nghiêm ngặt · LIS dài 1'), preset('Dãy rỗng', { values: [] }, 'LIS dài 0')], example: `6
+3 1 2 5 4 6`, kind: 'array', validate: sequenceValidation, initial: i => ({ values: i.values, secondary: Array(new Set(i.values).size).fill(0), secondaryLabel: 'Fenwick' }), simulate: fenwickLIS,
+  parseInput: raw => { const t = tokens(raw); need(t.length >= 1, 'Cần n và dãy.'); const n = Number(t[0]); need(Number.isInteger(n) && n >= 0, 'n không hợp lệ.'); const values = t.slice(1).map(Number); need(values.length === n && values.every(Number.isSafeInteger), 'Dãy không hợp lệ.'); return { values }; },
+  randomInput: () => { const n = ri(0, 10); const vals = Array.from({length: n}, () => ri(-5, 9)); return `${n}\n${vals.join(' ')}`; },
 };

@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, need } from './_shared';
 import source from '../../webcode/sudoku.cpp?raw';
 
 function* sudokuSim({ grid: input }: { grid: string[][] }): Generator<SimulationEvent> {
@@ -43,5 +43,15 @@ function validateSudoku(input: any): string | null {
 }
 
 export const sudoku: Algorithm = {
-  id: 'sudoku', title: 'Sudoku', category: 'Quay lui', tags: ['Ràng buộc', 'Lưới 9×9'], complexity: 'O(9^E)', description: 'Giải Sudoku bằng quay lui', goal: 'Thử số tại ô trống đầu tiên, hoàn tác khi không thể đi tiếp.', inputFormat: 'Bảng 9×9; X là ô trống.', note: 'Mô phỏng kiểm tra số cho sẵn và báo vô nghiệm. C++ chỉ in bảng sau khi gọi quayLui.', source, pseudocode: ['Tìm ô X đầu tiên; hết ô thì thành công', 'Thử 1..9; kiểm tra hàng, cột và vùng', 'Điền số vào sudoku[dong][cot]', 'quayLui(); nếu thành công thì trả về', 'Xóa ô nếu nhánh thất bại', 'In bảng và trạng thái kết thúc'], presets: [preset('Bảng có quay lui', { grid: ['53XX7XXXX', '6XX195XXX', 'X98XXXX6X', '8XXX6XXX3', '4XX8X3XX1', '7XXX2XXX6', 'X6XXXX28X', 'XXX419XX5', 'XXXX8XX79'].map(row => row.split('')) }, '51 ô trống'), preset('Đã giải', { grid: solvedBoard }, 'Bảng hợp lệ · Không còn ô trống'), preset('Không có nghiệm', { grid: ['X12345678', '9XXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX'].map(row => row.split('')) }, 'Ô đầu tiên không có số hợp lệ')], kind: 'grid', validate: validateSudoku, initial: i => ({ grid: structuredClone(i.grid) }), simulate: sudokuSim,
+  id: 'sudoku', title: 'Sudoku', category: 'Quay lui', tags: ['Ràng buộc', 'Lưới 9×9'], complexity: 'O(9^E)', description: 'Giải Sudoku bằng quay lui', goal: 'Thử số tại ô trống đầu tiên, hoàn tác khi không thể đi tiếp.', inputFormat: 'Bảng 9×9; X là ô trống.', note: 'Mô phỏng kiểm tra số cho sẵn và báo vô nghiệm. C++ chỉ in bảng sau khi gọi quayLui.', source, pseudocode: ['Tìm ô X đầu tiên; hết ô thì thành công', 'Thử 1..9; kiểm tra hàng, cột và vùng', 'Điền số vào sudoku[dong][cot]', 'quayLui(); nếu thành công thì trả về', 'Xóa ô nếu nhánh thất bại', 'In bảng và trạng thái kết thúc'], presets: [preset('Bảng có quay lui', { grid: ['53XX7XXXX', '6XX195XXX', 'X98XXXX6X', '8XXX6XXX3', '4XX8X3XX1', '7XXX2XXX6', 'X6XXXX28X', 'XXX419XX5', 'XXXX8XX79'].map(row => row.split('')) }, '51 ô trống'), preset('Đã giải', { grid: solvedBoard }, 'Bảng hợp lệ · Không còn ô trống'), preset('Không có nghiệm', { grid: ['X12345678', '9XXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX'].map(row => row.split('')) }, 'Ô đầu tiên không có số hợp lệ')], example: `53XX7XXXX
+6XX195XXX
+X98XXXX6X
+8XXX6XXX3
+4XX8X3XX1
+7XXX2XXX6
+X6XXXX28X
+XXX419XX5
+XXXX8XX79`, kind: 'grid', validate: validateSudoku, initial: i => ({ grid: structuredClone(i.grid) }), simulate: sudokuSim,
+  parseInput: raw => { const t = tokens(raw); need(t.length === 9, 'Cần đúng 9 hàng.'); const grid = t.map(row => row.split('')); need(grid.every(r => r.length === 9), 'Mỗi hàng cần 9 ký tự.'); return { grid }; },
+  randomInput: () => { const solved = Array.from({length: 9}, (_, r) => Array.from({length: 9}, (_, c) => String((r * 3 + Math.floor(r / 3) + c) % 9 + 1))); for (let i = 0; i < 45; i++) { const r = ri(0, 8), c = ri(0, 8); if (solved[r][c] !== 'X') solved[r][c] = 'X'; } return solved.map(r => r.join('')).join('\n'); },
 };

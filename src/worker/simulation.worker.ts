@@ -14,7 +14,7 @@ self.onmessage = async ({ data }: MessageEvent<WorkerCommand>) => {
     }
     if (busy || !runner) return;
     busy = true;
-    self.postMessage(runner.next(data.count, data.detail) satisfies WorkerResponse);
+    self.postMessage(data.type === 'prefetch' ? runner.nextAll(data.detail) : runner.next(data.count, data.detail) satisfies WorkerResponse);
   } catch (error) {
     self.postMessage({ type: 'error', message: error instanceof Error ? error.message : String(error) } satisfies WorkerResponse);
   } finally { busy = false; }

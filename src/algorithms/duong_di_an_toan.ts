@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, need } from './_shared';
 import source from '../../webcode2/duong_di_an_toan.cpp?raw';
 
 function* gridPaths({ grid }: { grid: string[] }): Generator<SimulationEvent> {
@@ -21,5 +21,10 @@ function* gridPaths({ grid }: { grid: string[] }): Generator<SimulationEvent> {
 }
 
 export const duongDiAnToan: Algorithm = {
-  id: 'duong_di_an_toan', title: 'Đường đi an toàn', category: 'Quy hoạch động', tags: ['Lưới', 'Modulo'], complexity: 'O(n²)', description: 'Đếm đường đi tránh chướng ngại vật', goal: 'Chỉ đi xuống hoặc sang phải; cộng số đường từ trên và trái.', inputFormat: 'Lưới vuông; . là ô trống, * là chướng ngại.', source, pseudocode: ['Ô đầu trống: dp[0][0] = 1', 'Ô *: đặt số đường bằng 0', 'Ô trống: cộng trên và trái, modulo 1e9+7', 'In dp[n−1][n−1]'], presets: [preset('Có chướng ngại', { grid: ['....', '.*..', '...*', '....'] }, 'Lưới 4×4'), preset('Chặn ô đầu', { grid: ['*..', '...', '...'] }, 'Không có đường'), preset('Chặn ô cuối', { grid: ['..', '.*'] }, 'Không có đường')], kind: 'grid', validate: i => Array.isArray(i?.grid) && i.grid.length > 0 && i.grid.length <= 1000 && i.grid.every((row: any) => typeof row === 'string' && row.length === i.grid.length && /^[.*]+$/.test(row)) ? null : 'Cần lưới vuông tối đa 1.000×1.000.', initial: i => ({ grid: i.grid.map((row: string) => [...row].map(x => x === '*' ? '*' : 0)) }), simulate: gridPaths,
+  id: 'duong_di_an_toan', title: 'Đường đi an toàn', category: 'Quy hoạch động', tags: ['Lưới', 'Modulo'], complexity: 'O(n²)', description: 'Đếm đường đi tránh chướng ngại vật', goal: 'Chỉ đi xuống hoặc sang phải; cộng số đường từ trên và trái.', inputFormat: 'Lưới vuông; . là ô trống, * là chướng ngại.', source, pseudocode: ['Ô đầu trống: dp[0][0] = 1', 'Ô *: đặt số đường bằng 0', 'Ô trống: cộng trên và trái, modulo 1e9+7', 'In dp[n−1][n−1]'], presets: [preset('Có chướng ngại', { grid: ['....', '.*..', '...*', '....'] }, 'Lưới 4×4'), preset('Chặn ô đầu', { grid: ['*..', '...', '...'] }, 'Không có đường'), preset('Chặn ô cuối', { grid: ['..', '.*'] }, 'Không có đường')], example: `3
+...
+...
+...`, kind: 'grid', validate: i => Array.isArray(i?.grid) && i.grid.length > 0 && i.grid.length <= 1000 && i.grid.every((row: any) => typeof row === 'string' && row.length === i.grid.length && /^[.*]+$/.test(row)) ? null : 'Cần lưới vuông tối đa 1.000×1.000.', initial: i => ({ grid: i.grid.map((row: string) => [...row].map(x => x === '*' ? '*' : 0)) }), simulate: gridPaths,
+  parseInput: raw => { const t = tokens(raw); need(t.length >= 1, 'Cần n và lưới.'); const n = Number(t[0]); need(Number.isInteger(n) && n > 0, 'n không hợp lệ.'); const grid = t.slice(1); need(grid.length === n && grid.every(r => r.length === n && /^[.*]+$/.test(r)), 'Lưới không hợp lệ.'); return { grid }; },
+  randomInput: () => { const n = ri(2, 6); const rows = [`${n}`]; for (let r = 0; r < n; r++) rows.push(Array.from({length: n}, () => pick(['.', '.', '.', '*'])).join('')); return rows.join('\n'); },
 };

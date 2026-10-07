@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset, validateTree } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, validateTree, tokens, need } from './_shared';
 import source from '../../webcode2/nguoi_giao_com.cpp?raw';
 
 type TreeInput = { n: number; edges: number[][]; queries: number[][] };
@@ -46,5 +46,16 @@ function* lca({ n, edges, queries }: TreeInput): Generator<SimulationEvent> {
 }
 
 export const nguoiGiaoCom: Algorithm = {
-  id: 'nguoi_giao_com', title: 'Người giao cơm', category: 'Cấu trúc dữ liệu', tags: ['Cây', 'LCA', 'Binary lifting'], complexity: 'O((n + q)·log n)', description: 'Khoảng cách giữa hai đỉnh trên cây', goal: 'Tìm tổ tiên chung thấp nhất rồi tính số cạnh trên đường đi.', inputFormat: 'Cây n đỉnh, n−1 cạnh và các cặp truy vấn.', source, pseudocode: ['DFS bằng stack từ gốc 1', 'Lưu doSau và cha[v][k] = tổ tiên 2^k', 'Nâng đỉnh sâu hơn để cùng độ sâu', 'Nâng đồng thời nếu tổ tiên khác nhau', 'LCA → khoảng cách = sâu[a]+sâu[b]−2×sâu[LCA]', 'Kết thúc'], presets: [preset('Cây bảy đỉnh', { n: 7, edges: [[1, 2], [1, 3], [2, 4], [2, 5], [3, 6], [3, 7]], queries: [[4, 7], [2, 5], [6, 6]] }, 'Truy vấn khác nhánh, tổ tiên và chính nó'), preset('Một đỉnh', { n: 1, edges: [], queries: [[1, 1]] }, 'Khoảng cách 0')], kind: 'tree', validate: validateTree, initial: i => ({ values: Array.from({ length: i.n }, (_, j) => j + 1), edges: i.edges, variables: { root: 1 } }), simulate: lca,
+  id: 'nguoi_giao_com', title: 'Người giao cơm', category: 'Cấu trúc dữ liệu', tags: ['Cây', 'LCA', 'Binary lifting'], complexity: 'O((n + q)·log n)', description: 'Khoảng cách giữa hai đỉnh trên cây', goal: 'Tìm tổ tiên chung thấp nhất rồi tính số cạnh trên đường đi.', inputFormat: 'Cây n đỉnh, n−1 cạnh và các cặp truy vấn.', source, pseudocode: ['DFS bằng stack từ gốc 1', 'Lưu doSau và cha[v][k] = tổ tiên 2^k', 'Nâng đỉnh sâu hơn để cùng độ sâu', 'Nâng đồng thời nếu tổ tiên khác nhau', 'LCA → khoảng cách = sâu[a]+sâu[b]−2×sâu[LCA]', 'Kết thúc'], presets: [preset('Cây bảy đỉnh', { n: 7, edges: [[1, 2], [1, 3], [2, 4], [2, 5], [3, 6], [3, 7]], queries: [[4, 7], [2, 5], [6, 6]] }, 'Truy vấn khác nhánh, tổ tiên và chính nó'), preset('Một đỉnh', { n: 1, edges: [], queries: [[1, 1]] }, 'Khoảng cách 0')], example: `7 3
+1 2
+1 3
+2 4
+2 5
+3 6
+3 7
+4 7
+2 5
+6 6`, kind: 'tree', validate: validateTree, initial: i => ({ values: Array.from({ length: i.n }, (_, j) => j + 1), edges: i.edges, variables: { root: 1 } }), simulate: lca,
+  parseInput: raw => { const t = tokens(raw); need(t.length >= 2, 'Cần n, q và dữ liệu.'); const n = Number(t[0]), q = Number(t[1]); need(Number.isInteger(n) && Number.isInteger(q) && n > 0 && q > 0, 'n, q không hợp lệ.'); const rest = t.slice(2).map(Number); need(rest.length === (n - 1) * 2 + q * 2, `Cần ${n - 1} cạnh và ${q} truy vấn.`); const edges = Array.from({ length: n - 1 }, (_, i) => rest.slice(i * 2, i * 2 + 2)); const queries = Array.from({ length: q }, (_, i) => rest.slice((n - 1) * 2 + i * 2, (n - 1) * 2 + i * 2 + 2)); return { n, edges, queries }; },
+  randomInput: () => { const n = ri(2, 8), q = ri(1, 4); const edges = []; for (let v = 2; v <= n; v++) edges.push([ri(1, v - 1), v]); const qs = Array.from({length: q}, () => `${ri(1, n)} ${ri(1, n)}`); return `${n} ${q}\n${edges.map(e => e.join(' ')).join('\n')}\n${qs.join('\n')}`; },
 };

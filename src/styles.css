@@ -109,6 +109,11 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .bar-col.path .bar-fill { background: #e8f2fa; border-color: #9cc5dc; }
 .bar-col b { font-size: 11px; font-family: Consolas, monospace; }
 .bar-col small { font-size: 8px; color: #64727b; }
+.custom-input textarea { width: 100%; margin-top: 10px; padding: 12px; border: 1px solid var(--border); background: #fff; border-radius: 5px; font: 12px/1.6 Consolas, monospace; resize: vertical; }
+.custom-actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.random-button { background: #eef4f8; border-color: #c8d8e2; color: #3b6a85; }
+.random-button:hover:not(:disabled) { background: #e0edf5; border-color: #9cc0d6; }
+.custom-applied { margin-top: 8px; font-size: 11px; color: #176d54; background: #e3f3ec; border-left: 3px solid #229b7a; padding: 8px 10px; }
 .bounds { display: grid; grid-template-columns: 1fr 1fr; font-size: 10px; gap: 6px; margin-top: 15px; padding: 8px; background: #f4f7f8; }
 .bounds span { color: #64727b; }
 .bounds b { text-align: right; font-weight: 500; }

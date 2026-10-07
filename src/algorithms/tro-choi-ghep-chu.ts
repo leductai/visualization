@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, lines, need } from './_shared';
 import source from '../../webcode/tro-choi-ghep-chu.cpp?raw';
 
 function* wordSearch(input: { word: string; grid: string[] }): Generator<SimulationEvent> {
@@ -30,5 +30,10 @@ function* wordSearch(input: { word: string; grid: string[] }): Generator<Simulat
 }
 
 export const troChoiGhepChu: Algorithm = {
-  id: 'tro-choi-ghep-chu', title: 'Trò chơi ghép chữ', category: 'Quay lui', tags: ['Lưới', 'Tám hướng'], complexity: 'O(R·C·8^L)', description: 'Tìm từ trên lưới chữ cái', goal: 'Đường đi không được sử dụng một ô hai lần.', inputFormat: 'Từ và bảng chữ nhật.', source, pseudocode: ['Nếu viTri == độ dài từ: trả về true', 'Loại ô ngoài bảng, đã dùng hoặc sai ký tự', 'daDung[dong][cot] = true', 'Thử đệ quy tám ô lân cận', 'Nếu thất bại: bỏ đánh dấu ô', 'Thử từng ô đầu; in true hoặc false'], presets: [preset('Tìm CAT', { word: 'CAT', grid: ['CAT', 'XXX', 'XXX'] }, 'Bảng 3×3 · CAT'), preset('Không có đường đi', { word: 'DOG', grid: ['CAT', 'AAA', 'TTT'] }, 'Bảng 3×3 · DOG')], kind: 'grid', validate: i => typeof i?.word === 'string' && i.word.length > 0 && Array.isArray(i.grid) && i.grid.length > 0 && typeof i.grid[0] === 'string' && i.grid[0].length > 0 && i.grid.every((r: any) => typeof r === 'string' && r.length === i.grid[0].length) ? null : 'Từ và bảng chữ nhật không được rỗng.', initial: i => ({ grid: i.grid.map((r: string) => r.split('')), path: [] }), simulate: wordSearch,
+  id: 'tro-choi-ghep-chu', title: 'Trò chơi ghép chữ', category: 'Quay lui', tags: ['Lưới', 'Tám hướng'], complexity: 'O(R·C·8^L)', description: 'Tìm từ trên lưới chữ cái', goal: 'Đường đi không được sử dụng một ô hai lần.', inputFormat: 'Từ và bảng chữ nhật.', source, pseudocode: ['Nếu viTri == độ dài từ: trả về true', 'Loại ô ngoài bảng, đã dùng hoặc sai ký tự', 'daDung[dong][cot] = true', 'Thử đệ quy tám ô lân cận', 'Nếu thất bại: bỏ đánh dấu ô', 'Thử từng ô đầu; in true hoặc false'], presets: [preset('Tìm CAT', { word: 'CAT', grid: ['CAT', 'XXX', 'XXX'] }, 'Bảng 3×3 · CAT'), preset('Không có đường đi', { word: 'DOG', grid: ['CAT', 'AAA', 'TTT'] }, 'Bảng 3×3 · DOG')], example: `CAT
+CAT
+XXX
+XXX`, kind: 'grid', validate: i => typeof i?.word === 'string' && i.word.length > 0 && Array.isArray(i.grid) && i.grid.length > 0 && typeof i.grid[0] === 'string' && i.grid[0].length > 0 && i.grid.every((r: any) => typeof r === 'string' && r.length === i.grid[0].length) ? null : 'Từ và bảng chữ nhật không được rỗng.', initial: i => ({ grid: i.grid.map((r: string) => r.split('')), path: [] }), simulate: wordSearch,
+  parseInput: raw => { const tkns = tokens(raw); need(tkns.length >= 2, 'Cần từ và lưới.'); const word = tkns[0]; const grid = tokens(raw).slice(1).filter(r => r !== '.'); need(grid.length > 0, 'Lưới không được rỗng.'); return { word, grid }; },
+  randomInput: () => { const word = randomLetters(ri(2, 4), 'CATDOGRA'); const g = Array.from({length: 3}, () => randomLetters(3, 'CATDOGX')); g[0] = word[0] + g[0].slice(1); if (word.length >= 2) g[1] = g[1][0] + word[1] + g[1].slice(2); if (word.length >= 3) g[2] = word[2] + g[2].slice(1); return word + '\n' + g.join('\n'); },
 };

@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, need } from './_shared';
 import source from '../../webcode2/do_an.cpp?raw';
 
 type Interval = { start: number; end: number; value: number };
@@ -28,5 +28,12 @@ function* intervals({ projects }: { projects: Interval[] }): Generator<Simulatio
 }
 
 export const doAn: Algorithm = {
-  id: 'do_an', title: 'Đồ án', category: 'Quy hoạch động', tags: ['Khoảng có trọng số', 'Tìm kiếm nhị phân'], complexity: 'O(n·log n)', description: 'Chọn các đồ án không giao nhau', goal: 'Dự án trước phải kết thúc trước thời điểm bắt đầu dự án sau.', inputFormat: 'Danh sách {start, end, value}.', note: 'Điều kiện tương thích là end < start. Hai dự án chạm nhau ở cùng thời điểm không được chọn cùng.', source, pseudocode: ['Sắp xếp dự án theo kết thúc', 'Khởi tạo dp[0] bằng tín chỉ dự án đầu', 'Tìm dự án cuối có end < start[i]', 'dp[i] = max(dp[i−1], value[i]+dp[trước])', 'In dp[n−1]'], presets: [preset('Năm dự án', { projects: [{ start: 1, end: 3, value: 5 }, { start: 2, end: 5, value: 6 }, { start: 4, end: 6, value: 5 }, { start: 6, end: 7, value: 4 }, { start: 7, end: 9, value: 8 }] }, 'Chọn dự án 1, 3, 5 · Tổng 18'), preset('Chạm biên', { projects: [{ start: 1, end: 2, value: 5 }, { start: 2, end: 3, value: 7 }] }, 'Kết quả 7, không phải 12')], kind: 'timeline', validate: i => Array.isArray(i?.projects) && i.projects.length > 0 && i.projects.length <= 200000 && i.projects.every((p: any) => Number.isSafeInteger(p?.start) && Number.isSafeInteger(p?.end) && Math.abs(p.start) <= 1e9 && Math.abs(p.end) <= 1e9 && p.start <= p.end && Number.isSafeInteger(p.value) && p.value >= 0 && p.value <= 1e9) ? null : 'Cần các khoảng hợp lệ với giá trị không âm.', initial: i => ({ intervals: i.projects, values: Array(i.projects.length).fill(0) }), simulate: intervals,
+  id: 'do_an', title: 'Đồ án', category: 'Quy hoạch động', tags: ['Khoảng có trọng số', 'Tìm kiếm nhị phân'], complexity: 'O(n·log n)', description: 'Chọn các đồ án không giao nhau', goal: 'Dự án trước phải kết thúc trước thời điểm bắt đầu dự án sau.', inputFormat: 'Danh sách {start, end, value}.', note: 'Điều kiện tương thích là end < start. Hai dự án chạm nhau ở cùng thời điểm không được chọn cùng.', source, pseudocode: ['Sắp xếp dự án theo kết thúc', 'Khởi tạo dp[0] bằng tín chỉ dự án đầu', 'Tìm dự án cuối có end < start[i]', 'dp[i] = max(dp[i−1], value[i]+dp[trước])', 'In dp[n−1]'], presets: [preset('Năm dự án', { projects: [{ start: 1, end: 3, value: 5 }, { start: 2, end: 5, value: 6 }, { start: 4, end: 6, value: 5 }, { start: 6, end: 7, value: 4 }, { start: 7, end: 9, value: 8 }] }, 'Chọn dự án 1, 3, 5 · Tổng 18'), preset('Chạm biên', { projects: [{ start: 1, end: 2, value: 5 }, { start: 2, end: 3, value: 7 }] }, 'Kết quả 7, không phải 12')], example: `5
+1 3 5
+2 5 6
+4 6 5
+6 7 4
+7 9 8`, kind: 'timeline', validate: i => Array.isArray(i?.projects) && i.projects.length > 0 && i.projects.length <= 200000 && i.projects.every((p: any) => Number.isSafeInteger(p?.start) && Number.isSafeInteger(p?.end) && Math.abs(p.start) <= 1e9 && Math.abs(p.end) <= 1e9 && p.start <= p.end && Number.isSafeInteger(p.value) && p.value >= 0 && p.value <= 1e9) ? null : 'Cần các khoảng hợp lệ với giá trị không âm.', initial: i => ({ intervals: i.projects, values: Array(i.projects.length).fill(0) }), simulate: intervals,
+  parseInput: raw => { const t = tokens(raw); need(t.length >= 1, 'Cần số dự án.'); const n = Number(t[0]); need(Number.isInteger(n) && n > 0, 'Số dự án không hợp lệ.'); const rest = t.slice(1).map(Number); need(rest.length === n * 3, `Cần ${n} dự án start end value.`); const projects = Array.from({ length: n }, (_, i) => ({ start: rest[i * 3], end: rest[i * 3 + 1], value: rest[i * 3 + 2] })); need(projects.every(p => Number.isSafeInteger(p.start) && Number.isSafeInteger(p.end) && p.start <= p.end && Number.isSafeInteger(p.value) && p.value >= 0), 'Dữ liệu dự án không hợp lệ.'); return { projects }; },
+  randomInput: () => { const n = ri(2, 6); const items = Array.from({length: n}, () => { const s = ri(1, 9), e = ri(s, s + 4); return [s, e, ri(1, 10)]; }); return `${n}\n${items.map(x => x.join(' ')).join('\n')}`; },
 };

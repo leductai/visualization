@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset, sequenceValidation } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, sequenceValidation, tokens, need } from './_shared';
 import source from '../../webcode2/daicontangdainhat2.cpp?raw';
 
 type Sequence = { values: number[] };
@@ -31,5 +31,8 @@ function* tailsLIS({ values }: Sequence): Generator<SimulationEvent> {
 }
 
 export const daicontangdainhat2: Algorithm = {
-  id: 'daicontangdainhat2', title: 'LIS và truy vết', category: 'Cấu trúc dữ liệu', tags: ['Tails', 'Liên kết trước'], complexity: 'O(n·log n)', description: 'Dựng lại dãy con tăng dài nhất', goal: 'Giữ đuôi nhỏ nhất mỗi độ dài và liên kết tới phần tử trước.', inputFormat: 'Dãy số nguyên.', source, pseudocode: ['Tìm đuôi cuối < daySo[i] bằng nhị phân', 'Lưu phần tử trước; nối dài hoặc thay đuôi nhỏ hơn', 'Đi ngược phanTuTruoc từ đuôi LIS', 'In độ dài và dãy theo thứ tự ban đầu'], presets: [preset('Dãy hỗn hợp', { values: [3, 1, 2, 5, 4, 6] }, 'Truy vết 1 → 2 → 4 → 6'), preset('Giá trị trùng', { values: [2, 2, 2] }, 'Giữ đuôi đầu tiên theo mã C++'), preset('Dãy rỗng', { values: [] }, 'Độ dài 0')], kind: 'array', validate: sequenceValidation, initial: i => ({ values: i.values, secondary: [], secondaryLabel: 'giaTriCuoi' }), simulate: tailsLIS,
+  id: 'daicontangdainhat2', title: 'LIS và truy vết', category: 'Cấu trúc dữ liệu', tags: ['Tails', 'Liên kết trước'], complexity: 'O(n·log n)', description: 'Dựng lại dãy con tăng dài nhất', goal: 'Giữ đuôi nhỏ nhất mỗi độ dài và liên kết tới phần tử trước.', inputFormat: 'Dãy số nguyên.', source, pseudocode: ['Tìm đuôi cuối < daySo[i] bằng nhị phân', 'Lưu phần tử trước; nối dài hoặc thay đuôi nhỏ hơn', 'Đi ngược phanTuTruoc từ đuôi LIS', 'In độ dài và dãy theo thứ tự ban đầu'], presets: [preset('Dãy hỗn hợp', { values: [3, 1, 2, 5, 4, 6] }, 'Truy vết 1 → 2 → 4 → 6'), preset('Giá trị trùng', { values: [2, 2, 2] }, 'Giữ đuôi đầu tiên theo mã C++'), preset('Dãy rỗng', { values: [] }, 'Độ dài 0')], example: `6
+3 1 2 5 4 6`, kind: 'array', validate: sequenceValidation, initial: i => ({ values: i.values, secondary: [], secondaryLabel: 'giaTriCuoi' }), simulate: tailsLIS,
+  parseInput: raw => { const t = tokens(raw); need(t.length >= 1, 'Cần n và dãy.'); const n = Number(t[0]); need(Number.isInteger(n) && n >= 0, 'n không hợp lệ.'); const values = t.slice(1).map(Number); need(values.length === n && values.every(Number.isSafeInteger), 'Dãy không hợp lệ.'); return { values }; },
+  randomInput: () => { const n = ri(0, 10); const vals = Array.from({length: n}, () => ri(-5, 9)); return `${n}\n${vals.join(' ')}`; },
 };

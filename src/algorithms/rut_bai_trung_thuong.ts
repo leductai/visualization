@@ -1,6 +1,6 @@
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { emitter } from './events';
-import { preset } from './_shared';
+import { preset, ri, pick, randomDigits, randomLetters, randomWeights, tokens, need } from './_shared';
 import source from '../../webcode2/rut_bai_trung_thuong.cpp?raw';
 
 type EditInput = { a: string; b: string };
@@ -36,5 +36,7 @@ function* editDistance({ a, b }: EditInput): Generator<SimulationEvent> {
 }
 
 export const rutBaiTrungThuong: Algorithm = {
-  id: 'rut_bai_trung_thuong', title: 'Rút bài trúng thưởng', category: 'Quy hoạch động', tags: ['Edit distance', 'Hàng cuộn'], complexity: 'O(n·m)', description: 'Khoảng cách chỉnh sửa hai chuỗi', goal: 'Chèn, xóa hoặc thay một ký tự với chi phí 1.', inputFormat: 'Hai chuỗi a và b.', note: 'Bộ tính dùng hai hàng như C++; ma trận đầy đủ chỉ phục vụ quan sát. Chuỗi rỗng là mở rộng vì cin không đọc được chuỗi rỗng.', source, pseudocode: ['Khởi tạo hàng 0 bằng 0..m', 'Đặt dp[i][0] = i', 'So sánh a[i−1] với b[j−1]', 'Giữ ký tự hoặc min(thay, xóa, chèn)', 'In dp[n][m]'], presets: [preset('kitten → sitting', { a: 'kitten', b: 'sitting' }, 'Khoảng cách 3'), preset('Chuỗi rỗng', { a: '', b: 'abc' }, 'Chèn 3 ký tự'), preset('Giống nhau', { a: 'algo', b: 'algo' }, 'Khoảng cách 0')], kind: 'grid', validate: i => typeof i?.a === 'string' && typeof i?.b === 'string' && i.a.length <= 5000 && i.b.length <= 5000 ? null : 'Hai chuỗi dài tối đa 5.000 ký tự.', initial: i => ({ grid: Array.from({ length: i.a.length + 1 }, () => Array(i.b.length + 1).fill('·')), rowLabels: ['∅', ...i.a], columnLabels: ['∅', ...i.b] }), simulate: editDistance,
+  id: 'rut_bai_trung_thuong', title: 'Rút bài trúng thưởng', category: 'Quy hoạch động', tags: ['Edit distance', 'Hàng cuộn'], complexity: 'O(n·m)', description: 'Khoảng cách chỉnh sửa hai chuỗi', goal: 'Chèn, xóa hoặc thay một ký tự với chi phí 1.', inputFormat: 'Hai chuỗi a và b.', note: 'Bộ tính dùng hai hàng như C++; ma trận đầy đủ chỉ phục vụ quan sát. Chuỗi rỗng là mở rộng vì cin không đọc được chuỗi rỗng.', source, pseudocode: ['Khởi tạo hàng 0 bằng 0..m', 'Đặt dp[i][0] = i', 'So sánh a[i−1] với b[j−1]', 'Giữ ký tự hoặc min(thay, xóa, chèn)', 'In dp[n][m]'], presets: [preset('kitten → sitting', { a: 'kitten', b: 'sitting' }, 'Khoảng cách 3'), preset('Chuỗi rỗng', { a: '', b: 'abc' }, 'Chèn 3 ký tự'), preset('Giống nhau', { a: 'algo', b: 'algo' }, 'Khoảng cách 0')], example: `kitten sitting`, kind: 'grid', validate: i => typeof i?.a === 'string' && typeof i?.b === 'string' && i.a.length <= 5000 && i.b.length <= 5000 ? null : 'Hai chuỗi dài tối đa 5.000 ký tự.', initial: i => ({ grid: Array.from({ length: i.a.length + 1 }, () => Array(i.b.length + 1).fill('·')), rowLabels: ['∅', ...i.a], columnLabels: ['∅', ...i.b] }), simulate: editDistance,
+  parseInput: raw => { const t = tokens(raw); need(t.length === 2, 'Cần đúng hai chuỗi.'); return { a: t[0], b: t[1] }; },
+  randomInput: () => randomLetters(ri(3, 8), 'abc') + ' ' + randomLetters(ri(3, 8), 'abc'),
 };
