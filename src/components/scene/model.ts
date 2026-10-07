@@ -9,13 +9,21 @@ function text(value: Cell, sudoku: boolean) {
   return value === '' || sudoku && value === 'X' ? '·' : typeof value === 'boolean' ? value ? '●' : '○' : String(value);
 }
 
+const categoryPalette = {
+  'Quay lui': { accent: '#3f9d73', base: '#e8f4ee', edge: '#9cc4b2' },
+  'Quy hoạch động': { accent: '#3b7dbf', base: '#e4edf8', edge: '#99b8d6' },
+  'Cấu trúc dữ liệu': { accent: '#c27824', base: '#fbf1e4', edge: '#dab582' },
+} as const;
+
 export function buildSceneModel(algorithm: Algorithm, state: VisualState, action?: SimulationEvent['action']): SceneModel {
   const nodes: SceneNode[] = [], links: SceneLink[] = [];
+  const palette = categoryPalette[algorithm.category] ?? categoryPalette['Cấu trúc dữ liệu'];
   const activeColor = action === 'reject' ? '#e9a390' : action === 'undo' ? '#b7a7d5' : '#60c2a5';
-  const color = (index: number, base = '#f8fbfc') => state.active?.includes(index) ? activeColor : state.marked?.includes(index) ? '#f0c999' : state.path?.includes(index) ? '#a2d7ee' : base;
-  const add = (key: string, index: number, value: Cell, caption: string, x: number, z: number, width = .94, height = .3, base = '#f8fbfc', y = 0) => {
+  const color = (index: number, base: string = palette.base) => state.active?.includes(index) ? activeColor : state.marked?.includes(index) ? '#f0c999' : state.path?.includes(index) ? '#a2d7ee' : base;
+  const add = (key: string, index: number, value: Cell, caption: string, x: number, z: number, width = .94, height = .3, base?: string, y = 0) => {
+    const nodeBase = base ?? palette.base;
     const active = index >= 0 && (state.active?.includes(index) ?? false);
-    nodes.push({ key, index, label: text(value, algorithm.id === 'sudoku'), caption, position: [x, y + height / 2 + (active ? .42 : 0), z], size: [width, height, .94], color: index < 0 ? base : color(index, base), active });
+    nodes.push({ key, index, label: text(value, algorithm.id === 'sudoku'), caption, position: [x, y + height / 2 + (active ? .42 : 0), z], size: [width, height, .94], color: index < 0 ? nodeBase : color(index, nodeBase), active });
   };
   if (state.edges) {
     const adjacency = new Map<number, number[]>(), depth = new Map([[1, 0]]), queue = [1];

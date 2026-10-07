@@ -69,7 +69,17 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .compact .array-cell { width: 36px; min-height: 48px; }
 .compact .array-cell b { min-height: 29px; font-size: 13px; }
 .compact .array-cell small { font-size: 8px; }
-.array-cell.active, .grid-cell.active { background: #e0f4ec; color: #07745d; border-color: #159276; box-shadow: 0 0 0 1px #159276; }
+.array-cell.active, .grid-cell.active, .bar-col.active { background: #e0f4ec; color: #07745d; border-color: #159276; box-shadow: 0 0 0 1px #159276; }
+.array-cell.active.a-reject, .grid-cell.active.a-reject, .bar-col.active.a-reject { background: #fbeae6; color: #9b4d39; border-color: #d07d66; box-shadow: 0 0 0 1px #d07d66; }
+.array-cell.active.a-undo, .grid-cell.active.a-undo, .bar-col.active.a-undo { background: #f0ecf9; color: #6b518c; border-color: #9c86bd; box-shadow: 0 0 0 1px #9c86bd; }
+.array-cell.active.a-accept, .grid-cell.active.a-accept, .bar-col.active.a-accept { background: #d9f3e8; color: #0a6d52; border-color: #12a07c; box-shadow: 0 0 0 1px #12a07c; }
+.array-cell.active.a-check, .grid-cell.active.a-check, .bar-col.active.a-check { background: #e8f0fb; color: #2f5f9e; border-color: #6f9bd0; box-shadow: 0 0 0 1px #6f9bd0; }
+.array-cell.active.a-output, .grid-cell.active.a-output, .bar-col.active.a-output, .array-cell.active.a-complete, .grid-cell.active.a-complete, .bar-col.active.a-complete { background: #d9f3e8; color: #0a6d52; border-color: #12a07c; }
+.tree-node.active.a-reject circle { fill: #fbeae6; stroke: #d07d66; }
+.tree-node.active.a-undo circle { fill: #f0ecf9; stroke: #9c86bd; }
+.tree-node.active.a-accept circle { fill: #d9f3e8; stroke: #12a07c; }
+.interval-row.active.a-reject .interval-bar { background: #fbeae6; color: #9b4d39; border-color: #d07d66; }
+.interval-row.active.a-undo .interval-bar { background: #f0ecf9; color: #6b518c; border-color: #9c86bd; }
 .array-cell.marked, .grid-cell.marked { background: #fff0e8; color: #975039; border-color: #e2b5a0; }
 .array-cell.path, .grid-cell.path { background: #e8f2fa; color: #2a6387; border-color: #9cc5dc; }
 .empty-value { font-size: 24px; color: #64727b; }
@@ -90,6 +100,15 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .recursion-path .data-label { margin: 0 7px 0 0; font-family: inherit; }
 .recursion-path > span:not(.data-label) { width: 22px; height: 22px; display: grid; place-items: center; font: 10px Consolas, monospace; border: 1px solid #e0e6e9; border-radius: 50%; color: #64727b; }
 .recursion-path > span.current { background: var(--green); color: #fff; border-color: var(--green); }
+.bar-row { width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.bar-track { display: flex; align-items: flex-end; gap: 5px; width: 100%; max-width: 640px; min-height: 110px; border-bottom: 1px solid #dbe2e6; padding-bottom: 0; }
+.bar-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; min-height: 110px; justify-content: flex-end; padding: 0 2px; border-radius: 3px; }
+.bar-col .bar-fill { width: 100%; background: #cfe3ee; border: 1px solid #bcd6e6; border-radius: 3px 3px 0 0; min-height: 3px; }
+.bar-col.active .bar-fill { background: #e0f4ec; border-color: #159276; }
+.bar-col.marked .bar-fill { background: #fff0e8; border-color: #e2b5a0; }
+.bar-col.path .bar-fill { background: #e8f2fa; border-color: #9cc5dc; }
+.bar-col b { font-size: 11px; font-family: Consolas, monospace; }
+.bar-col small { font-size: 8px; color: #64727b; }
 .bounds { display: grid; grid-template-columns: 1fr 1fr; font-size: 10px; gap: 6px; margin-top: 15px; padding: 8px; background: #f4f7f8; }
 .bounds span { color: #64727b; }
 .bounds b { text-align: right; font-weight: 500; }
@@ -118,6 +137,7 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .legend span { display: flex; align-items: center; gap: 4px; }
 .legend span:before { content: ''; width: 6px; height: 6px; background: #d6efe5; border: 1px solid #86c9b0; border-radius: 2px; }
 .legend .legend-marked:before { background: #f9e9de; border-color: #d6b095; }
+.legend .legend-path:before { background: #e8f2fa; border-color: #9cc5dc; }
 .segmented { display: flex; background: #f2f4f5; border: 1px solid #e5e9eb; border-radius: 4px; padding: 2px; flex-shrink: 0; }
 .segmented button { font-size: 10px; padding: 4px 8px; border-radius: 3px; }
 .segmented .on { background: #fff; box-shadow: 0 1px 3px #0000000c; color: var(--green); }
