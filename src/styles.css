@@ -157,10 +157,10 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .code .highlight { background: #e6f3ed; border-left-color: var(--green); color: #09725b; }
 .code .highlight em { color: #24745b; }
 .console-output-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
-.console { border: 1px solid var(--border); background: #fff; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 320px; }
-.console-body { padding: 13px 17px; display: flex; gap: 12px; align-items: flex-start; min-height: 52px; flex-shrink: 0; }
+.console { position: relative; border: 1px solid var(--border); background: #fff; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 320px; }
+.console-body { margin-top: auto; padding: 13px 17px; display: flex; gap: 12px; align-items: flex-start; min-height: 52px; flex-shrink: 0; max-height: 55%; overflow-y: auto; }
 .console-body p { margin: 1px 0 0; font-size: 12px; color: #5c6b75; overflow-wrap: anywhere; }
-.variables { padding: 0 17px 13px; display: flex; flex-wrap: wrap; gap: 7px; overflow-y: auto; flex: 1; min-height: 0; align-content: flex-start; }
+.variables { padding: 6px 17px 13px; display: flex; flex-wrap: wrap; gap: 7px; overflow-y: auto; max-height: 45%; flex-shrink: 0; align-content: flex-start; background: #fff; border-top: 1px solid var(--border); }
 .output-panel { background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 320px; }
 .output-panel .panel-heading { height: 40px; flex-shrink: 0; }
 .output-viewport { flex: 1; overflow-y: auto; min-height: 0; }
@@ -168,7 +168,6 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .console .panel-heading { height: 40px; }
 .console-icon { font: bold 16px Consolas, monospace; color: #64727b; }
 .step-count { font: 9px Consolas, monospace; }
-.console-body { padding: 13px 17px; display: flex; gap: 12px; align-items: flex-start; min-height: 52px; }
 .console-body p { margin: 1px 0 0; font-size: 12px; color: #5c6b75; overflow-wrap: anywhere; }
 .action-pill { display: inline-flex; align-items: center; justify-content: center; font-size: 9px; padding: 3px 7px; border-radius: 3px; white-space: nowrap; background: #edf3f7; color: #436980; min-width: 60px; }
 .action-accept, .action-complete, .action-output { background: #e3f3ec; color: #176d54; }
