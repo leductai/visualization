@@ -62,6 +62,11 @@ export default function App() {
   const applyRandom = () => applyCustom(algorithm.randomInput());
   const resetCustom = () => { setCustomInput(null); setCustomRaw(''); setCustomError(''); };
   const player = usePlayer(algorithm, preset, customInput);
+  const consoleRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const body = consoleRef.current;
+    if (body) body.scrollTop = body.scrollHeight;
+  }, [player.consoleHistory.length]);
   useEffect(() => {
     const onHash = () => { const next = findAlgorithm(window.location.hash.slice(1)); setAlgorithm(current => { if (current.id !== next.id) setPreset(0); return next; }); };
     window.addEventListener('hashchange', onHash); return () => window.removeEventListener('hashchange', onHash);
@@ -86,7 +91,7 @@ export default function App() {
         <CodePanel algorithm={algorithm} line={player.event?.line} cppLine={player.event?.cppLine}/>
       </section>
       <div className="console-output-row">
-      <section className="console"><div className="panel-heading"><span><span className="console-icon">›_</span> {vi.console}</span><span className="step-count">BƯỚC {player.step.toLocaleString('vi-VN')} / {player.total.toLocaleString('vi-VN')}</span></div><div className="console-body" key={`${player.runKey}:${player.step}`}><span className={`action-pill action-${player.event?.action ?? 'update'}`}>{player.event ? vi.actions[player.event.action] : 'Sẵn sàng'}</span><p aria-live="polite">{player.event?.explanation ?? (customInput ? 'Đang dùng input tùy chỉnh. Nhấn Bước hoặc Chạy để bắt đầu.' : algorithm.presets[preset].summary)}</p></div>
+      <section className="console"><div className="panel-heading"><span><span className="console-icon">›_</span> {vi.console}</span><span className="step-count">BƯỚC {player.step.toLocaleString('vi-VN')} / {player.total.toLocaleString('vi-VN')}</span></div><div className="console-body" ref={consoleRef}>{player.consoleHistory.length === 0 && <div className="console-line"><span className="action-pill">Sẵn sàng</span><p aria-live="polite">{player.event?.explanation ?? (customInput ? 'Đang dùng input tùy chỉnh. Nhấn Bước hoặc Chạy để bắt đầu.' : algorithm.presets[preset].summary)}</p></div>}{player.consoleHistory.map((entry, i) => <div className={`console-line ${i === player.consoleHistory.length - 1 ? 'current' : ''}`} key={`${entry.step}-${entry.timestamp}-${i}`}><span className={`action-pill action-${entry.action}`}>{vi.actions[entry.action]}</span><p>{entry.explanation}</p></div>)}</div>
         {player.state.variables && <div className="variables">{Object.entries(player.state.variables).map(([key, value]) => <span key={key}><b>{key}</b><code>{String(value)}</code></span>)}</div>}
       </section>
       <OutputPanel count={player.outputCount} runKey={player.runKey} read={player.readOutputs} seek={player.seek}/>

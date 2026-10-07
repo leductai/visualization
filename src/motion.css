@@ -51,7 +51,7 @@
 .motion-on .visual-stage[data-action='accept'] .active, .motion-on .visual-stage[data-action='update'] .active { animation: cell-select 320ms ease-out; }
 .motion-on .visual-stage[data-action='reject'] .active { animation: cell-reject 260ms ease-in-out; }
 .motion-on .visual-stage[data-action='undo'] .active { animation: cell-undo 320ms ease-out; }
-.motion-on .console-body { animation: event-arrive 240ms ease-out; }
+.motion-on .console-line.current { animation: event-arrive 240ms ease-out; }
 .motion-on .code .highlight { animation: code-highlight 380ms ease-out; }
 .motion-on .result-banner { animation: result-arrive 440ms cubic-bezier(.2, .8, .2, 1); }
 .motion-on .result-banner svg { animation: result-check 520ms ease-out; }

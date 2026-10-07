@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Algorithm, Detail, SimulationEvent, VisualState, WorkerResponse } from './types';
 import { History } from './history';
 
+type ConsoleEntry = { explanation: string; step: number; action: SimulationEvent['action']; timestamp: number };
+
 type Status = 'ready' | 'running' | 'paused' | 'complete' | 'stopped';
 export function usePlayer(algorithm: Algorithm, preset: number, customInput: any | null = null) {
   const resolve = () => customInput ?? algorithm.presets[preset].input;
@@ -12,12 +14,20 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
   const [speed, setSpeed] = useState(2), [detail, setDetail] = useState<Detail>('easy');
   const [elapsed, setElapsed] = useState(0);
   const [warning, setWarning] = useState(''), [version, setVersion] = useState(0), [ready, setReady] = useState(false);
+  const [consoleHistory, setConsoleHistory] = useState<ConsoleEntry[]>([]);
   const worker = useRef<Worker | null>(null), history = useRef<History | null>(null);
   const busy = useRef(false), position = useRef(0), length = useRef(0), outputLength = useRef(0);
+  const loggedUpTo = useRef(0);
   const current = useRef(state), finished = useRef(false), cancelled = useRef(false), generation = useRef(0);
   const pendingSeek = useRef<number | null>(null);
   const prefetching = useRef(false);
   const detailRef = useRef(detail); detailRef.current = detail;
+
+  const logEvent = useCallback((action: SimulationEvent['action'], explanation: string, index: number) => {
+    if (index <= loggedUpTo.current) return;
+    loggedUpTo.current = index;
+    setConsoleHistory(prev => [...prev, { explanation, step: index, action, timestamp: Date.now() }]);
+  }, []);
 
   const applyFrame = useCallback((next: VisualState, nextEvent: SimulationEvent | undefined, index: number, outputs: number) => {
     current.current = next; position.current = index;
@@ -30,6 +40,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
     applyFrame(initial, undefined, 0, 0); length.current = 0; outputLength.current = 0;
     finished.current = false; cancelled.current = false; busy.current = true; pendingSeek.current = null;
     setPlaying(false); setStatus('ready'); setTotal(0); setWarning(''); setReady(false); setElapsed(0);
+    setConsoleHistory([]); loggedUpTo.current = 0;
     const fail = (message: string) => {
       if (token !== generation.current) return;
       setWarning(message); setPlaying(false); setStatus('stopped'); cancelled.current = true;
@@ -77,13 +88,14 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
           length.current = index; outputLength.current = outputs;
           applyFrame(next, e, index, outputs); setTotal(index);
           if (e.action === 'complete') { finished.current = true; setPlaying(false); setStatus('complete'); }
+          logEvent(e.action, e.explanation, index);
         }
         if (data.done) { finished.current = true; setPlaying(false); setStatus('complete'); }
       } catch (error) { fail(error instanceof Error ? error.message : String(error)); }
       if (token === generation.current) busy.current = false;
     };
     return () => { ++generation.current; w.terminate(); void h.close().catch(() => undefined); };
-  }, [algorithm, preset, customInput, version, applyFrame]);
+  }, [algorithm, preset, customInput, version, applyFrame, logEvent]);
 
   const seek = useCallback(async (index: number) => {
     if (index < 0 || index > length.current) return;
@@ -95,10 +107,11 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
       if (token !== generation.current) return;
       if (index && !frame) throw new Error('Không tìm thấy bước trong lịch sử.');
       applyFrame(frame?.state ?? algorithm.initial(resolve()), frame?.event, index, frame?.outputCount ?? 0);
+      if (frame?.event) logEvent(frame.event.action, frame.event.explanation, index);
       setStatus(cancelled.current ? 'stopped' : finished.current && index === length.current ? 'complete' : 'paused');
     } catch (error) { if (token === generation.current) setWarning(String(error)); }
     finally { if (token === generation.current) busy.current = false; }
-  }, [algorithm, preset, applyFrame]);
+  }, [algorithm, preset, applyFrame, logEvent]);
 
   useEffect(() => {
     if (!busy.current && pendingSeek.current !== null) void seek(pendingSeek.current);
@@ -113,6 +126,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
         if (token !== generation.current) return;
         if (!frame) throw new Error('Không tìm thấy bước tiếp theo.');
         applyFrame(frame.state, frame.event, position.current + 1, frame.outputCount);
+        if (frame.event) logEvent(frame.event.action, frame.event.explanation, position.current + 1);
         if (position.current === length.current && finished.current) { setPlaying(false); setStatus('complete'); }
       } catch (error) { if (token === generation.current) { setWarning(String(error)); setPlaying(false); } }
       finally { if (token === generation.current) busy.current = false; }
@@ -121,7 +135,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
       worker.current?.postMessage({ type: 'next', count: 1, detail: detailRef.current });
       setStatus(currentStatus => currentStatus === 'running' ? 'running' : 'paused');
     } else { setPlaying(false); setStatus(cancelled.current ? 'stopped' : 'complete'); }
-  }, [applyFrame]);
+  }, [applyFrame, logEvent]);
 
   useEffect(() => {
     if (!playing) return;
@@ -140,6 +154,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
   return { state, event, playing, status, step, total, outputCount, elapsed, speed, setSpeed, detail,
     setDetail: (value: Detail) => { if (!playing) setDetail(value); }, warning, ready, canNext, next, seek,
     readOutputs: useCallback((offset: number, count: number) => history.current?.getOutputs(offset, count) ?? Promise.resolve([]), []),
+    consoleHistory,
     runKey: `${algorithm.id}:${preset}:${version}:${customInput ? 'custom' : ''}`,
     reset: () => setVersion(v => v + 1),
     toggle: () => {
