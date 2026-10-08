@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 17 original modules', () => {
-    expect(algorithms).toHaveLength(17);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(17);
+  it('contains all 18 original modules', () => {
+    expect(algorithms).toHaveLength(18);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(18);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -134,6 +134,21 @@ describe('DP and data structures', () => {
     expect(run('duong_di_an_toan', { grid: ['*..', '...', '...'] }).outputs).toEqual(['0']);
     expect(run('duong_di_an_toan', { grid: ['..', '.*'] }).outputs).toEqual(['0']);
   });
+  it('solves the 2-variable LP graphically, flags infeasible and unbounded', () => {
+    const a = findAlgorithm('quy-hoach-tuyen-tinh');
+    const parsed = a.parseInput('max 3x + 2y\n2x + y <= 10\nx + 2y <= 8\nx >= 0\ny >= 0');
+    expect(a.validate(parsed)).toBeNull();
+    expect(parsed).toEqual({ cx: 3, cy: 2, sense: 'max', cons: expect.any(Array) });
+    const { state, outputs } = run('quy-hoach-tuyen-tinh', parsed);
+    expect(outputs).toHaveLength(1); expect(outputs[0]).toContain('16'); expect(outputs[0]).toContain('4');
+    expect(state.lp?.best).toBeGreaterThanOrEqual(0);
+    expect(run('quy-hoach-tuyen-tinh', a.presets[1].input).state.result).toContain('Vô nghiệm');
+    expect(run('quy-hoach-tuyen-tinh', a.presets[2].input).state.result).toContain('Không giới nội');
+    const minParsed = a.parseInput('Z = x + y -> min\nx <= 5\ny <= 4\nx >= 1\ny >= 1');
+    expect(a.validate(minParsed)).toBeNull();
+    expect(run('quy-hoach-tuyen-tinh', minParsed).outputs[0]).toContain('2');
+    expect(a.validate({ cx: 1, cy: 1, sense: 'max', cons: [] })).not.toBeNull();
+  });
   it('uses strict interval compatibility', () => {
     expect(run('do_an', { projects: [{ start: 1, end: 2, value: 5 }, { start: 2, end: 3, value: 7 }] }).outputs).toEqual(['7']);
     expect(run('do_an', findAlgorithm('do_an').presets[0].input).outputs).toEqual(['18']);
@@ -175,6 +190,7 @@ describe('custom input parsers', () => {
     daycontangdainhat: '6\n3 1 2 5 4 6',
     daicontangdainhat2: '6\n3 1 2 5 4 6',
     'vach-thuoc': '8 3',
+    'quy-hoach-tuyen-tinh': 'max 3x + 2y\n2x + y <= 10\nx + 2y <= 8\nx >= 0\ny >= 0',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

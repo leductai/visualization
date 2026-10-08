@@ -94,6 +94,21 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .ruler-tick.active .tick-label { color: #fff; }
 .ruler-scale { display: flex; gap: 6px; padding: 0 8px; font: 9px Consolas, monospace; color: #64727b; }
 .ruler-scale span { flex: 1; max-width: 46px; text-align: center; border-top: 1px solid #c9d3d8; padding-top: 3px; }
+.lp-svg { width: 100%; max-width: 640px; margin: 0 auto; display: block; }
+.lp-grid { stroke: #e3eaee; stroke-width: 1; }
+.lp-axis { stroke: #53616b; stroke-width: 1.6; }
+.lp-axis-label { font: 700 13px Consolas, monospace; fill: #53616b; }
+.lp-tick { font: 10px Consolas, monospace; fill: #8a969e; text-anchor: middle; }
+.lp-line { stroke: #7d8a92; stroke-width: 1.4; stroke-dasharray: 6 3; }
+.lp-line-label { font: 10px Consolas, monospace; fill: #7d8a92; }
+.lp-poly { fill: rgba(64, 157, 115, .18); stroke: #3f9d73; stroke-width: 2; }
+.lp-gradient { stroke: #c0392b; stroke-width: 2; stroke-dasharray: 5 3; }
+.lp-arrow-head { fill: none; stroke: #c0392b; stroke-width: 1.6; }
+.lp-vertex circle { fill: #3b7dbf; stroke: #fff; stroke-width: 1.6; }
+.lp-vertex text { font: 10px Consolas, monospace; fill: #41647b; }
+.lp-vertex.best circle { fill: #259b7c; }
+.lp-vertex.active circle { stroke: #12705a; stroke-width: 3; }
+.lp-status { font: 700 15px Segoe UI, Arial; fill: #a44a3a; }
 .matrix { max-width: 100%; width: fit-content; margin: 0 auto; }
 .matrix-row { display: grid; grid-template-columns: repeat(var(--columns), minmax(28px, 40px)); }
 .matrix-row:has(.row-label), .matrix-row.column-labels { grid-template-columns: 22px repeat(var(--columns), minmax(28px, 40px)); }

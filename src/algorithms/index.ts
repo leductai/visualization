@@ -15,6 +15,7 @@ import { doAn } from './do_an';
 import { daycontangdainhat } from './daycontangdainhat';
 import { daicontangdainhat2 } from './daicontangdainhat2';
 import { vachThuoc } from './vach-thuoc';
+import { quyHoachTuyenTinh } from './quy-hoach-tuyen-tinh';
 
 export const algorithms = [
   sinhHoanVi,
@@ -34,6 +35,7 @@ export const algorithms = [
   daycontangdainhat,
   daicontangdainhat2,
   vachThuoc,
+  quyHoachTuyenTinh,
 ];
 
 export const findAlgorithm = (id: string) => algorithms.find(a => a.id === id) ?? algorithms[0];

@@ -20,7 +20,7 @@ function Sidebar({ selected, select, close }: { selected: Algorithm; select: (a:
     <div className="side-label">{vi.library}<span>{algorithms.length}</span></div>
     <nav aria-label="Thư viện thuật toán">{groups.map(group => <section key={group}><div className="group-title">{group}<span>{matches.filter(a => a.category === group).length}</span></div>{matches.filter(a => a.category === group).map(a => <button className={`nav-item ${a.id === selected.id ? 'selected' : ''}`} aria-current={a.id === selected.id ? 'page' : undefined} onClick={() => select(a)} key={a.id}><span className="nav-index">{String(algorithms.indexOf(a) + 1).padStart(2, '0')}</span><span>{a.title}</span>{a.id === selected.id && <ChevronRight size={14}/>}</button>)}</section>)}</nav>
     {!matches.length && <p className="search-empty">Không tìm thấy thuật toán</p>}
-    <div className="sidebar-footer"><span className="system-dot"/> 16 bài toán · C++ → mô phỏng</div>
+    <div className="sidebar-footer"><span className="system-dot"/> {algorithms.length} bài toán · C++ → mô phỏng</div>
   </aside>;
 }
 
@@ -76,7 +76,7 @@ export default function App() {
     {navOpen && <button className="nav-backdrop" aria-label="Đóng thư viện" onClick={() => setNavOpen(false)}/>}
     <Sidebar selected={algorithm} select={choose} close={() => setNavOpen(false)}/>
     <main className="main"><header className="topbar"><button className="icon-button open-nav" onClick={() => setNavOpen(true)} title="Thư viện thuật toán" aria-label="Thư viện thuật toán"><Menu size={20}/></button><div><div className="eyebrow">PHÒNG THÍ NGHIỆM / {algorithm.category.toUpperCase()}</div><h1>{algorithm.title}</h1></div><div className="top-actions"><span className="system-dot"/> Cục bộ</div><button className={`icon-button motion-toggle ${motion ? 'on' : ''}`} aria-pressed={motion} disabled={reduced} onClick={toggleMotion} aria-label={reduced ? vi.reducedMotion : motion ? vi.disableMotion : vi.enableMotion} title={reduced ? vi.reducedMotion : motion ? vi.disableMotion : vi.enableMotion} data-tooltip={reduced ? vi.reducedMotion : motion ? vi.disableMotion : vi.enableMotion}><Sparkles size={17}/></button></header>
-      <div className="content"><section className="intro" key={algorithm.id}><div><p className="kicker">BÀI TOÁN {String(algorithms.indexOf(algorithm) + 1).padStart(2, '0')} / 16</p><h2>{algorithm.description}</h2><p className="goal">{algorithm.goal}</p><div className="tags">{algorithm.tags.map(tag => <span key={tag}>{tag}</span>)}<span className="complexity">{algorithm.complexity}</span></div></div>
+      <div className="content"><section className="intro" key={algorithm.id}><div><p className="kicker">BÀI TOÁN {String(algorithms.indexOf(algorithm) + 1).padStart(2, '0')} / {String(algorithms.length).padStart(2, '0')}</p><h2>{algorithm.description}</h2><p className="goal">{algorithm.goal}</p><div className="tags">{algorithm.tags.map(tag => <span key={tag}>{tag}</span>)}<span className="complexity">{algorithm.complexity}</span></div></div>
         <div className="preset-box"><label htmlFor="preset">ĐẦU VÀO MẪU</label><select id="preset" value={preset} onChange={e => setPreset(Number(e.target.value))}>{algorithm.presets.map((p, i) => <option value={i} key={p.name}>{p.name}</option>)}</select><small>{algorithm.presets[preset].summary}</small></div>
       </section>
       <details className="input-detail"><summary>Dữ liệu đầu vào</summary><p>{algorithm.inputFormat}</p><pre>{JSON.stringify(customInput ?? algorithm.presets[preset].input, null, 2)}</pre></details>
