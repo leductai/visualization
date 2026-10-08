@@ -114,6 +114,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
   const isRecursive = algorithm.category === 'Quay lui';
   const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? 0);
   const caption = algorithm.category === 'Quay lui' ? `QUAY LUI · ${algorithm.kind === 'grid' ? 'BẢNG ĐIỀU KHIỂN' : 'MẢNG LỰA CHỌN'}`
+    : algorithm.category === 'Chia để trị' ? `CHIA ĐỂ TRỊ · ĐỆ QUY`
     : algorithm.category === 'Quy hoạch động' ? `QUY HOẠCH ĐỘNG · BẢNG DP`
     : algorithm.kind === 'tree' ? 'CÂY GỐC 1' : algorithm.kind === 'timeline' ? 'DỰ ÁN / THỜI GIAN' : algorithm.kind === 'grid' ? 'BẢNG TRẠNG THÁI' : algorithm.kind === 'string' ? 'PHÂN ĐOẠN' : 'CẤU TRÚC DỮ LIỆU';
   return <div className={`visual-stage visual-${algorithm.kind} ${mode === '3d' ? 'immersive-stage' : ''}`} data-testid="visual-stage" data-action={action}>

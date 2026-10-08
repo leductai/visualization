@@ -11,6 +11,7 @@ function text(value: Cell, sudoku: boolean) {
 
 const categoryPalette = {
   'Quay lui': { accent: '#3f9d73', base: '#e8f4ee', edge: '#9cc4b2' },
+  'Chia để trị': { accent: '#7c5cbf', base: '#ece7f8', edge: '#b3a3d9' },
   'Quy hoạch động': { accent: '#3b7dbf', base: '#e4edf8', edge: '#99b8d6' },
   'Cấu trúc dữ liệu': { accent: '#c27824', base: '#fbf1e4', edge: '#dab582' },
 } as const;
@@ -25,6 +26,39 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     const active = index >= 0 && (state.active?.includes(index) ?? false);
     nodes.push({ key, index, label: text(value, algorithm.id === 'sudoku'), caption, position: [x, y + height / 2 + (active ? .42 : 0), z], size: [width, height, .94], color: index < 0 ? nodeBase : color(index, nodeBase), active });
   };
+  if (algorithm.id === 'vach-thuoc' && state.grid && state.grid.length > 0 && (state.grid[0]?.length ?? 0) > 0) {
+    const rows = state.grid.length, cols = state.grid[0].length;
+    const marks: (number | null)[] = Array(cols).fill(null);
+    for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) {
+      const v = state.grid[r][c];
+      if (typeof v === 'number' && v > 0) marks[c] = Math.max(marks[c] ?? 0, v);
+      else if (typeof v === 'string' && /^\d+$/.test(v)) marks[c] = Math.max(marks[c] ?? 0, Number(v));
+    }
+    const activeCols = new Set((state.active ?? []).map(i => ((i % cols) + cols) % cols));
+    const L = cols - 1;
+    const baseTop = 0.22, backEdge = -1.5;
+    nodes.push({ key: 'ruler-base', index: -1, label: '', caption: `Thước dài ${L} · ${rows} tầng`, position: [0, 0.11, 0.2], size: [cols * 1.02 + 0.5, 0.22, 3.4], color: '#deb86a', active: false });
+    for (let c = 0; c < cols; c++) {
+      const mark = marks[c], isActive = activeCols.has(c);
+      // Vạch nằm dẹt trên mặt thước, dài theo độ cao như thước thật (không dựng đứng).
+      const len = mark ? 0.6 + (mark / Math.max(1, rows)) * 1.9 : 0.35;
+      const thick = isActive ? 0.06 : 0.035;
+      const x = (c - (cols - 1) / 2) * 1.02;
+      nodes.push({
+        key: `tick-${c}`, index: c, label: '',
+        caption: `Vạch ${c} · ${mark ? `cao ${mark}` : 'chưa vạch'}${isActive ? ' · đang xét' : ''}`,
+        position: [x, baseTop + thick / 2 + (isActive ? 0.12 : 0), backEdge + len / 2],
+        size: [mark ? (mark === rows ? 0.22 : 0.16) : 0.1, thick, len],
+        color: isActive ? activeColor : mark ? '#33414f' : '#c9a86a', active: isActive,
+      });
+      nodes.push({
+        key: `scale-${c}`, index: -1, label: String(c), caption: `Vị trí ${c}`,
+        position: [x, baseTop + 0.015, 1.45], size: [0.6, 0.03, 0.5],
+        color: isActive ? '#ffe9bd' : '#f7ecd2', active: false,
+      });
+    }
+    return { nodes, links };
+  }
   if (state.edges) {
     const adjacency = new Map<number, number[]>(), depth = new Map([[1, 0]]), queue = [1];
     for (const [a, b] of state.edges) { if (!adjacency.has(a)) adjacency.set(a, []); if (!adjacency.has(b)) adjacency.set(b, []); adjacency.get(a)!.push(b); adjacency.get(b)!.push(a); }

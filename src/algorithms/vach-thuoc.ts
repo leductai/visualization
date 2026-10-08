@@ -35,7 +35,7 @@ function* vachThuocSim({ L, h }: { L: number; h: number }): Generator<Simulation
 }
 
 export const vachThuoc: Algorithm = {
-  id: 'vach-thuoc', title: 'Vạch thước', category: 'Quay lui', tags: ['Chia để trị', 'Đệ quy'], complexity: 'O(2^h)', description: 'Vạch chia thước theo chia để trị', goal: 'Mỗi đoạn giữa vạch theo h, rồi chia hai nửa với h−1.', inputFormat: 'Độ dài L và độ cao h.', example: '8 3', kind: 'grid', source, pseudocode: ['Nếu h <= 0 hoặc còn 1 ô: dừng', 'Tìm m giữa đoạn l..r', 'Vạch tại m với chiều cao h', 'Đệ quy đoạn trái với h-1', 'Đệ quy đoạn phải với h-1', 'Kết thúc'],
+  id: 'vach-thuoc', title: 'Vạch thước', category: 'Chia để trị', tags: ['Chia để trị', 'Đệ quy'], complexity: 'O(2^h)', description: 'Vạch chia thước theo chia để trị', goal: 'Mỗi đoạn giữa vạch theo h, rồi chia hai nửa với h−1.', inputFormat: 'Độ dài L và độ cao h.', example: '8 3', kind: 'grid', source, pseudocode: ['Nếu h <= 0 hoặc còn 1 ô: dừng', 'Tìm m giữa đoạn l..r', 'Vạch tại m với chiều cao h', 'Đệ quy đoạn trái với h-1', 'Đệ quy đoạn phải với h-1', 'Kết thúc'],
   presets: [preset('Thước 8, h=3', { L: 8, h: 3 }, '8 ô, cao 3 tầng'), preset('Thước 4, h=2', { L: 4, h: 2 }, '4 ô, cao 2 tầng'), preset('Thước 16, h=4', { L: 16, h: 4 }, '16 ô, cao 4 tầng')],
   validate: i => Number.isInteger(i?.L) && Number.isInteger(i?.h) && i.L >= 2 && i.L <= 64 && i.h >= 1 && i.h <= 8 && Number.isInteger(Math.log2(i.L)) && i.h <= Math.log2(i.L) + 1 ? null : 'Cần L là lũy thừa 2 (2..64), 1 <= h <= log2(L)+1.',
   initial: i => ({ grid: Array.from({ length: i.h }, () => Array(i.L + 1).fill('')), rowLabels: Array.from({ length: i.h }, (_, j) => String(i.h - j)), columnLabels: Array.from({ length: i.L + 1 }, (_, j) => String(j)) }),
