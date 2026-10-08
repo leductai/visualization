@@ -78,6 +78,35 @@ function Timeline({ state, action }: { state: VisualState; action?: SimulationEv
   </div>)}</div>;
 }
 
+function RulerView({ state }: { state: VisualState }) {
+  const grid = state.grid;
+  if (!grid || grid.length === 0) return null;
+  const rows = grid.length, cols = grid[0]?.length ?? 0;
+  const marks: (number | null)[] = Array(cols).fill(null);
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const v = grid[r][c];
+      if (typeof v === 'number' && v > 0) marks[c] = v;
+      else if (typeof v === 'string' && /^d+$/.test(v)) marks[c] = Number(v);
+    }
+  }
+  const activeCols = new Set((state.active ?? []).map(idx => idx % cols));
+  return (
+    <div className="ruler-wrap" aria-label="Mô hình cây thước">
+      <div className="ruler-track">
+        {marks.map((h, c) => (
+          <div key={c} className={`ruler-tick ${h ? '' : 'empty'} ${activeCols.has(c) ? 'active' : ''}`} style={{ height: h ? `${(h / rows) * 100}%` : '6%' }}>
+            {h ? <span className="tick-label">{h}</span> : null}
+          </div>
+        ))}
+      </div>
+      <div className="ruler-scale">
+        {Array.from({ length: cols }, (_, i) => <span key={i}>{i}</span>)}
+      </div>
+    </div>
+  );
+}
+
 export function VisualStage({ algorithm, state, mode, motion, step, action, runKey, onFallback, playback }: {
   algorithm: Algorithm; state: VisualState; mode: '2d' | '3d'; motion: boolean; step: number; action?: SimulationEvent['action']; runKey: string; onFallback: () => void;
   playback: ScenePlayback;
@@ -92,7 +121,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
     {mode === '3d' ? <Suspense fallback={<div className="scene-loading"><span className="loading-tiles"><i/><i/><i/></span>{vi.loadingScene}</div>}><Scene3D algorithm={algorithm} state={state} motion={motion} step={step} action={action} runKey={runKey} onFallback={onFallback} playback={playback}/></Suspense> : <div className="primary-visual">
       {state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }} action={action}/></div>}</>
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
-        : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan'} action={action}/>
+        : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan'} action={action}/>
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>
           : <ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/>}

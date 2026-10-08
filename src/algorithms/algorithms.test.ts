@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 16 original modules', () => {
-    expect(algorithms).toHaveLength(16);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(16);
+  it('contains all 17 original modules', () => {
+    expect(algorithms).toHaveLength(17);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(17);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -174,6 +174,7 @@ describe('custom input parsers', () => {
     do_an: '5\n1 3 5\n2 5 6\n4 6 5\n6 7 4\n7 9 8',
     daycontangdainhat: '6\n3 1 2 5 4 6',
     daicontangdainhat2: '6\n3 1 2 5 4 6',
+    'vach-thuoc': '8 3',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

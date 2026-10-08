@@ -85,6 +85,15 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .empty-value { font-size: 24px; color: #64727b; }
 .secondary-visual { border-top: 1px dashed #e3e8eb; margin-top: 20px; padding-top: 15px; }
 .data-label { display: block; color: #64727b; font-family: Consolas, monospace; font-size: 10px; text-align: center; margin-bottom: 9px; }
+.ruler-wrap { width: 100%; max-width: 720px; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.ruler-track { display: flex; align-items: flex-end; gap: 6px; height: 140px; border-bottom: 3px solid #6b7b84; padding: 0 8px; background: repeating-linear-gradient(90deg, #f4f7f8 0, #f4f7f8 1px, transparent 1px, transparent 12px); border-radius: 4px; }
+.ruler-tick { flex: 1; max-width: 46px; background: #7fb3c8; border: 1px solid #5e93aa; border-bottom: 0; border-radius: 3px 3px 0 0; position: relative; display: flex; justify-content: center; align-items: flex-start; transition: background-color 200ms, border-color 200ms, height 300ms; }
+.ruler-tick.empty { background: transparent; border: 0; border-bottom: 0; min-height: 6px; }
+.ruler-tick.active { background: #259b7c; border-color: #12705a; box-shadow: 0 0 0 1px #12705a; }
+.tick-label { font: 10px Consolas, monospace; color: #fff; margin-top: 3px; font-weight: 600; }
+.ruler-tick.active .tick-label { color: #fff; }
+.ruler-scale { display: flex; gap: 6px; padding: 0 8px; font: 9px Consolas, monospace; color: #64727b; }
+.ruler-scale span { flex: 1; max-width: 46px; text-align: center; border-top: 1px solid #c9d3d8; padding-top: 3px; }
 .matrix { max-width: 100%; width: fit-content; margin: 0 auto; }
 .matrix-row { display: grid; grid-template-columns: repeat(var(--columns), minmax(28px, 40px)); }
 .matrix-row:has(.row-label), .matrix-row.column-labels { grid-template-columns: 22px repeat(var(--columns), minmax(28px, 40px)); }
