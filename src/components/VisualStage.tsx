@@ -181,7 +181,7 @@ function LPView({ state, action, motion }: { state: VisualState; action?: Simula
     <defs><marker id="lp-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" className="lp-arrow-head"/></marker></defs>
     {disp.map((v, i) => <g key={i} opacity={v.o} className={`lp-vertex ${i === lp.best ? 'best' : ''} ${state.active?.includes(i) ? 'active' : ''} ${action ? `a-${action}` : ''}`}>
       <circle cx={sx(v.x)} cy={sy(v.y)} r={i === lp.best ? 8 : 5.5}/>
-      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({lp.verts[i].x}, {lp.verts[i].y})</text>
+      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({lp.verts[i]?.x ?? Math.round(v.x * 10) / 10}, {lp.verts[i]?.y ?? Math.round(v.y * 10) / 10})</text>
     </g>)}
     {disp.length > 0 && (() => { const v = disp[disp.length - 1]; return <g key={lp.verts.length} transform={`translate(${sx(v.x)},${sy(v.y)})`} className="lp-ripple"><circle r="8"/></g>; })()}
     {lp.status !== 'optimal' && <text x={W / 2} y={P} textAnchor="middle" className="lp-status">{lp.status === 'infeasible' ? 'Vô nghiệm' : 'Không giới nội'}</text>}
