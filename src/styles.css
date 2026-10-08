@@ -62,6 +62,21 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .stage-caption { display: flex; justify-content: space-between; gap: 8px; font-size: 9px; color: #64727b; margin-bottom: 22px; }
 .stage-caption > span:last-child { font-family: Consolas, monospace; }
 .primary-visual { min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.zoom-bar { position: sticky; top: 0; z-index: 5; width: 100%; display: flex; gap: 4px; justify-content: flex-end; padding: 4px 0; margin-bottom: 8px; background: transparent; pointer-events: none; }
+.zoom-bar .zoom-btn { pointer-events: auto; }
+.zoom-btn { min-width: 26px; height: 24px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; background: #f4f7f8; border: 1px solid #d7e1e6; border-radius: 4px; color: #47697c; cursor: pointer; }
+.zoom-btn:hover:not(:disabled) { background: #fff; color: #08765f; }
+.zoom-btn:disabled { opacity: .4; cursor: default; }
+.zoom-value { font: 10px Consolas, monospace; min-width: 46px; }
+.zoom-body { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.stage-panel:fullscreen { width: 100%; height: 100%; background: #fff; overflow: auto; }
+.fs-fallback { position: fixed; inset: 0; z-index: 100; height: auto !important; background: #fff; overflow: auto; }
+.fs-player { position: fixed; left: 0; right: 0; bottom: 0; z-index: 101; display: flex; align-items: center; gap: 12px; padding: 26px 20px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #1d323cd9 55%); color: #fff; }
+.fs-btn { width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #ffffff55; background: #ffffff22; color: #fff; cursor: pointer; }
+.fs-btn:hover:not(:disabled) { background: #ffffff44; }
+.fs-btn:disabled { opacity: .4; cursor: default; }
+.fs-slider { flex: 1; accent-color: #3fbf9a; cursor: pointer; }
+.fs-step { font: 12px Consolas, monospace; white-space: nowrap; }
 .array-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: center; width: 100%; }
 .array-cell { width: 51px; min-height: 64px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; border: 1px solid #dae1e5; border-radius: 5px; background: #fafbfc; }
 .array-cell b { display: flex; align-items: center; justify-content: center; min-height: 43px; padding: 4px; font-size: 17px; font-family: Consolas, monospace; font-weight: 500; overflow-wrap: anywhere; max-width: 100%; }

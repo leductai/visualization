@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { CheckCheck } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { CheckCheck, Expand, Maximize2, Pause, Play, Shrink, X, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Algorithm, Cell, SimulationEvent, VisualState } from '../engine/types';
 import type { LPVertex } from '../engine/types';
 import { vi } from '../i18n/vi';
@@ -225,20 +225,65 @@ function GraphView({ state }: { state: VisualState }) {
   </svg>;
 }
 
-export function VisualStage({ algorithm, state, mode, motion, step, action, runKey, onFallback, playback }: {
+export function VisualStage({ algorithm, state, mode, motion, step, action, runKey, onFallback, playback, total, onSeek }: {
   algorithm: Algorithm; state: VisualState; mode: '2d' | '3d'; motion: boolean; step: number; action?: SimulationEvent['action']; runKey: string; onFallback: () => void;
-  playback: ScenePlayback;
+  playback: ScenePlayback; total: number; onSeek: (index: number) => void;
 }) {
   const isRecursive = algorithm.category === 'Quay lui';
   const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? 0);
+  // Thu/phóng sơ đồ 2D: co theo layout nên thanh cuộn cập nhật theo.
+  const [zoom, setZoom] = useState(1);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const clampZoom = (v: number) => Math.min(2.5, Math.max(0.25, Math.round(v * 20) / 20));
+  const fitToScreen = useCallback(() => {
+    const el = bodyRef.current;
+    if (!el?.parentElement) return;
+    const natural = el.scrollWidth / (Number(el.style.zoom) || 1);
+    const avail = el.parentElement.clientWidth;
+    if (natural > 0 && avail > 0) setZoom(z => (natural > avail + 4 ? clampZoom(avail / natural) : z));
+  }, []);
+  useEffect(() => {
+    setZoom(1);
+    const raf = requestAnimationFrame(() => fitToScreen());
+    return () => cancelAnimationFrame(raf);
+  }, [algorithm.id, mode, state.grid?.[0]?.length, fitToScreen]);
+  // Toàn màn hình kiểu player video: phủ kín panel, thêm thanh trượt tiến trình.
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [fs, setFs] = useState(false);
+  useEffect(() => {
+    const sync = () => setFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  const toggleFs = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) { await document.exitFullscreen(); return; }
+      const panel = stageRef.current?.closest('.stage-panel') as HTMLElement | null;
+      if (panel && document.fullscreenEnabled) { await panel.requestFullscreen(); return; }
+      throw new Error('no fullscreen api');
+    } catch {
+      // Dự phòng khi trình duyệt chặn Fullscreen API: phủ kín bằng CSS.
+      const panel = stageRef.current?.closest('.stage-panel');
+      panel?.classList.toggle('fs-fallback');
+      setFs(was => !was);
+    }
+  }, []);
   const caption = algorithm.category === 'Quay lui' ? (algorithm.kind === 'graph' ? 'QUAY LUI · ĐỒ THỊ' : `QUAY LUI · ${algorithm.kind === 'grid' ? 'BẢNG ĐIỀU KHIỂN' : 'MẢNG LỰA CHỌN'}`)
     : algorithm.category === 'Chia để trị' ? `CHIA ĐỂ TRỊ · ĐỆ QUY`
     : algorithm.category === 'Tối ưu' ? `TỐI ƯU · ĐỒ THỊ X–Y`
     : algorithm.category === 'Quy hoạch động' ? `QUY HOẠCH ĐỘNG · BẢNG DP`
     : algorithm.kind === 'tree' ? 'CÂY GỐC 1' : algorithm.kind === 'timeline' ? 'DỰ ÁN / THỜI GIAN' : algorithm.kind === 'grid' ? 'BẢNG TRẠNG THÁI' : algorithm.kind === 'string' ? 'PHÂN ĐOẠN' : 'CẤU TRÚC DỮ LIỆU';
-  return <div className={`visual-stage visual-${algorithm.kind} ${mode === '3d' ? 'immersive-stage' : ''}`} data-testid="visual-stage" data-action={action}>
+  return <div ref={stageRef} className={`visual-stage visual-${algorithm.kind} ${mode === '3d' ? 'immersive-stage' : ''}`} data-testid="visual-stage" data-action={action}>
     <div className="stage-caption"><span>{caption}</span><span>{algorithm.complexity}</span></div>
-    {mode === '3d' ? <Suspense fallback={<div className="scene-loading"><span className="loading-tiles"><i/><i/><i/></span>{vi.loadingScene}</div>}><Scene3D algorithm={algorithm} state={state} motion={motion} step={step} action={action} runKey={runKey} onFallback={onFallback} playback={playback}/></Suspense> : <div className="primary-visual">
+    {mode === '3d' ? <Suspense fallback={<div className="scene-loading"><span className="loading-tiles"><i/><i/><i/></span>{vi.loadingScene}</div>}><Scene3D algorithm={algorithm} state={state} motion={motion} step={step} action={action} runKey={runKey} onFallback={onFallback} playback={playback} onFullscreen={toggleFs} isFs={fs}/></Suspense> : <div className="primary-visual">
+    <div className="zoom-bar" role="group" aria-label="Thu phóng sơ đồ 2D">
+      <button className="zoom-btn" onClick={() => setZoom(z => clampZoom(z - 0.25))} aria-label="Thu nhỏ sơ đồ" title="Thu nhỏ sơ đồ" disabled={zoom <= 0.25}><ZoomOut size={14}/></button>
+      <button className="zoom-btn zoom-value" onClick={() => setZoom(1)} aria-label="Đặt lại cỡ sơ đồ" title="Đặt lại cỡ sơ đồ (100%)">{Math.round(zoom * 100)}%</button>
+      <button className="zoom-btn" onClick={() => setZoom(z => clampZoom(z + 0.25))} aria-label="Phóng to sơ đồ" title="Phóng to sơ đồ" disabled={zoom >= 2.5}><ZoomIn size={14}/></button>
+      <button className="zoom-btn" onClick={fitToScreen} aria-label="Vừa màn hình" title="Co sơ đồ vừa màn hình"><Maximize2 size={14}/></button>
+      <button className="zoom-btn" onClick={toggleFs} aria-label={fs ? vi.exitFullscreen : vi.fullscreen} title={fs ? vi.exitFullscreen : vi.fullscreen}>{fs ? <Shrink size={14}/> : <Expand size={14}/>}</button>
+    </div>
+    <div className="zoom-body" ref={bodyRef} style={{ zoom }}>
       {state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }} action={action}/></div>}</>
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
         : state.graph ? <GraphView state={state}/>
@@ -247,12 +292,18 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>
           : <ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/>}
-    </div>}
+    </div></div>}
     {state.secondary && (mode === '2d' || Boolean(state.grid) || Boolean(state.edges)) && <div className="secondary-visual"><span className="data-label">{state.secondaryLabel ?? 'Bảng phụ'}</span><ArrayRow values={state.secondary} state={{}} labels={algorithm.id === 'truyvantong' || algorithm.id === 'rut_bai_trung_thuong' ? state.secondary.map((_, i) => String(i)) : undefined} compact/></div>}
     {mode === '3d' && state.secondary && !state.grid && !state.edges && <span className="scene-data-label">{state.secondaryLabel}</span>}
     {mode === '3d' && state.edges && state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }}/></div>}
     {isRecursive && !state.grid && <div className="recursion-path"><span className="data-label">Độ sâu</span>{Array.from({ length: Math.min(depth + 1, 21) }, (_, i) => <span className={i === depth ? 'current' : ''} key={i}>{i}</span>)}</div>}
     {algorithm.id === 'tinh-diem-mon-hoc' && state.variables?.canDuoi !== undefined && <div className="bounds"><span>Cận khả thi</span><b>{state.variables.canDuoi} … {state.variables.canTren}</b><span>Mục tiêu</span><b>{state.variables.tongThapNhat} … {state.variables.tongCaoNhat}</b></div>}
     {state.result && <div className="result-banner" data-testid="result"><CheckCheck size={18}/><span>Kết quả</span><pre>{state.result}</pre></div>}
+    {fs && <div className="fs-player" role="group" aria-label="Trình phát toàn màn hình">
+      <button className="fs-btn" onClick={playback.toggle} disabled={!playback.canNext} aria-label={playback.playing ? vi.pause : vi.play} title={playback.playing ? vi.pause : vi.play}>{playback.playing ? <Pause size={17}/> : <Play size={17}/>}</button>
+      <input className="fs-slider" aria-label={vi.seekVideo} type="range" min={0} max={Math.max(1, total)} value={step} disabled={!total} onChange={e => onSeek(Number(e.target.value))}/>
+      <span className="fs-step">{step} / {total}</span>
+      <button className="fs-btn" onClick={toggleFs} aria-label={vi.exitFullscreen} title={vi.exitFullscreen}><X size={17}/></button>
+    </div>}
   </div>;
 }

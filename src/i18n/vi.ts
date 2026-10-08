@@ -9,6 +9,7 @@ export const vi = {
   enableMotion: 'Bật chuyển động', disableMotion: 'Tắt chuyển động', reducedMotion: 'Giảm chuyển động theo hệ thống',
   sceneReady: 'Sẵn sàng', sceneData: 'Dữ liệu mô hình 3D', step: 'Bước', loadingScene: 'Đang tải mô hình',
   scenePlayback: 'Thực thi trong cảnh', sceneNext: 'Bước tiếp trong cảnh', scenePlay: 'Chạy trong cảnh', scenePause: 'Tạm dừng trong cảnh',
+  fullscreen: 'Toàn màn hình', exitFullscreen: 'Thoát toàn màn hình', seekVideo: 'Kéo tiến trình',
   graphicsFallback: 'Không mở được đồ họa 3D trên thiết bị này. Đã chuyển về 2D.',
   actions: { check: 'Kiểm tra', accept: 'Chọn', reject: 'Loại', update: 'Cập nhật', undo: 'Hoàn tác', output: 'Xuất', complete: 'Hoàn thành' },
 };

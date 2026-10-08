@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Focus, Minus, Pause, Play, Plus, Rotate3d, SkipForward } from 'lucide-react';
+import { Expand, Focus, Minus, Pause, Play, Plus, Rotate3d, Shrink, SkipForward } from 'lucide-react';
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { buildSceneModel } from './scene/model';
 import { createScene } from './scene/renderer';
@@ -7,9 +7,9 @@ import { vi } from '../i18n/vi';
 
 export interface ScenePlayback { canNext: boolean; playing: boolean; next: () => Promise<void>; toggle: () => void; }
 
-export default function Scene3D({ algorithm, state, action, step, runKey, motion, onFallback, playback }: {
+export default function Scene3D({ algorithm, state, action, step, runKey, motion, onFallback, playback, onFullscreen, isFs }: {
   algorithm: Algorithm; state: VisualState; action?: SimulationEvent['action']; step: number; runKey: string; motion: boolean; onFallback: () => void;
-  playback: ScenePlayback;
+  playback: ScenePlayback; onFullscreen: () => void; isFs: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null), scene = useRef<ReturnType<typeof createScene> | null>(null);
   const latest = useRef({ algorithm, state, action }); latest.current = { algorithm, state, action };
@@ -32,6 +32,7 @@ export default function Scene3D({ algorithm, state, action, step, runKey, motion
       <button className="icon-button" aria-label={vi.zoomIn} title={vi.zoomIn} data-tooltip={vi.zoomIn} onClick={() => scene.current?.zoom(1.2)}><Plus size={16}/></button>
       <button className="icon-button" aria-label={vi.zoomOut} title={vi.zoomOut} data-tooltip={vi.zoomOut} onClick={() => scene.current?.zoom(1 / 1.2)}><Minus size={16}/></button>
       <button className={`icon-button ${spinning ? 'on' : ''}`} disabled={!motion} aria-pressed={spinning} aria-label={vi.rotateScene} title={vi.rotateScene} data-tooltip={vi.rotateScene} onClick={() => { scene.current?.spin(!spinning); setSpinning(!spinning); }}><Rotate3d size={16}/></button>
+      <button className="icon-button" aria-label={isFs ? vi.exitFullscreen : vi.fullscreen} title={isFs ? vi.exitFullscreen : vi.fullscreen} data-tooltip={isFs ? vi.exitFullscreen : vi.fullscreen} onClick={onFullscreen}>{isFs ? <Shrink size={16}/> : <Expand size={16}/>}</button>
     </div>
     {hover && <div className="scene-inspect">{hover}</div>}
     <div className={`scene-step scene-step-${action ?? 'ready'}`} key={step}><span/>{action ? vi.actions[action] : vi.sceneReady}<small>{vi.step} {step}</small></div>
