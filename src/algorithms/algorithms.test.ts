@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 18 original modules', () => {
-    expect(algorithms).toHaveLength(18);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(18);
+  it('contains all 19 original modules', () => {
+    expect(algorithms).toHaveLength(19);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(19);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -149,6 +149,18 @@ describe('DP and data structures', () => {
     expect(run('quy-hoach-tuyen-tinh', minParsed).outputs[0]).toContain('2');
     expect(a.validate({ cx: 1, cy: 1, sense: 'max', cons: [] })).not.toBeNull();
   });
+  it('finds the MST by backtracking, prunes cycles and reports disconnects', () => {
+    const a = findAlgorithm('cay-khung-nho-nhat');
+    const { state, outputs } = run('cay-khung-nho-nhat', a.presets[0].input);
+    expect(outputs[outputs.length - 1]).toContain('63');
+    expect(state.graph?.bestTotal).toBe(63);
+    expect(state.graph?.best).toHaveLength(8);
+    const total = state.graph!.best.reduce((s, k) => s + a.presets[0].input.edges[k].w, 0);
+    expect(total).toBe(63);
+    expect(run('cay-khung-nho-nhat', a.presets[1].input).outputs[0]).toContain('3');
+    expect(run('cay-khung-nho-nhat', a.presets[2].input).state.result).toContain('Vô nghiệm');
+    expect(a.validate({ n: 3, edges: [{ u: 0, v: 0, w: 1 }] })).not.toBeNull();
+  });
   it('uses strict interval compatibility', () => {
     expect(run('do_an', { projects: [{ start: 1, end: 2, value: 5 }, { start: 2, end: 3, value: 7 }] }).outputs).toEqual(['7']);
     expect(run('do_an', findAlgorithm('do_an').presets[0].input).outputs).toEqual(['18']);
@@ -191,6 +203,7 @@ describe('custom input parsers', () => {
     daicontangdainhat2: '6\n3 1 2 5 4 6',
     'vach-thuoc': '8 3',
     'quy-hoach-tuyen-tinh': 'max 3x + 2y\n2x + y <= 10\nx + 2y <= 8\nx >= 0\ny >= 0',
+    'cay-khung-nho-nhat': '9 10\n1 2 6\n2 3 9\n1 4 14\n2 7 5\n2 5 12\n4 6 3\n4 7 8\n5 8 7\n7 8 10\n8 9 15',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

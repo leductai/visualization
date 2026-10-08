@@ -57,6 +57,15 @@
 .motion-on .result-banner svg { animation: result-check 520ms ease-out; }
 .motion-on .status-running i { animation: execution-pulse 1.6s ease-in-out infinite; }
 .motion-on .interval-bar, .motion-on .tree-node circle, .motion-on .tree-svg line { transition: fill 240ms, stroke 240ms, background-color 240ms, border-color 240ms; }
+.motion-on .lp-vertex circle { transition: fill 300ms; }
+.motion-on .visual-stage[data-action='accept'] .lp-vertex.active circle { animation: lp-pop 450ms ease-out; }
+.motion-on .lp-line-g { animation: lp-fade 500ms ease-out both; }
+.motion-on .lp-gradient { animation: lp-flow 1s linear infinite; }
+.motion-on .lp-ripple circle { fill: none; stroke: #259b7c; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: lp-ripple 700ms ease-out both; }
+@keyframes lp-pop { 0% { stroke-width: 6; } 100% { stroke-width: 1.6; } }
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-flow { to { stroke-dashoffset: -16; } }
+@keyframes lp-ripple { from { transform: scale(.4); opacity: 1; } to { transform: scale(3.2); opacity: 0; } }
 .motion-on .tree-svg .tree-path { stroke-dasharray: 9 5; animation: path-flow 1.3s linear infinite; }
 .motion-on .scene-step { animation: event-arrive 220ms ease-out; }
 .motion-on .loading-tiles i { animation: loading-tile 850ms ease-in-out infinite alternate; }

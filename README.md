@@ -1,6 +1,6 @@
 # Algo Studio
 
-Ứng dụng React + TypeScript + Vite trực quan hóa 18 thuật toán từ `webcode/` và `webcode2/`. Mã C++ được nhập nguyên bản để tham khảo; bộ mô phỏng TypeScript chạy trong Web Worker.
+Ứng dụng React + TypeScript + Vite trực quan hóa 19 thuật toán từ `webcode/` và `webcode2/`. Mã C++ được nhập nguyên bản để tham khảo; bộ mô phỏng TypeScript chạy trong Web Worker.
 
 ## Chạy ứng dụng
 

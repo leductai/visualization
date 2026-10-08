@@ -1,6 +1,7 @@
-import { lazy, Suspense, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { CheckCheck } from 'lucide-react';
 import type { Algorithm, Cell, SimulationEvent, VisualState } from '../engine/types';
+import type { LPVertex } from '../engine/types';
 import { vi } from '../i18n/vi';
 import type { ScenePlayback } from './Scene3D';
 
@@ -107,8 +108,41 @@ function RulerView({ state }: { state: VisualState }) {
   );
 }
 
-function LPView({ state, action }: { state: VisualState; action?: SimulationEvent['action'] }) {
+function LPView({ state, action, motion }: { state: VisualState; action?: SimulationEvent['action']; motion: boolean }) {
   const lp = state.lp;
+  // Nội suy vị trí đỉnh giữa các bước để chuyển động mượt (đỉnh mới chỉ thêm vào cuối).
+  const [disp, setDisp] = useState<(LPVertex & { o: number })[]>([]);
+  const prev = useRef<(LPVertex & { o: number })[]>([]);
+  useEffect(() => {
+    const target = lp?.verts ?? [];
+    if (!motion) {
+      const snap = target.map(v => ({ ...v, o: 1 }));
+      prev.current = snap; setDisp(snap); return;
+    }
+    const from = prev.current;
+    // Đỉnh mới bay ra từ tâm cụm đỉnh cũ (thay vì hiện đột ngột tại chỗ).
+    // Đỉnh đầu tiên bay ra từ giữa khung nhìn.
+    const viewCenter = { x: (lp!.xmin + lp!.xmax) / 2, y: (lp!.ymin + lp!.ymax) / 2, z: 0 };
+    const center = from.length ? {
+      x: from.reduce((s, v) => s + v.x, 0) / from.length,
+      y: from.reduce((s, v) => s + v.y, 0) / from.length,
+      z: from.reduce((s, v) => s + v.z, 0) / from.length,
+    } : viewCenter;
+    const start = target.map((v, i) => (from[i] ? { ...from[i] } : { ...center, o: 0 }));
+    let raf = 0;
+    const t0 = performance.now(), dur = 450;
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      const next = target.map((v, i) => {
+        const s = start[i];
+        return { x: s.x + (v.x - s.x) * e, y: s.y + (v.y - s.y) * e, z: s.z + (v.z - s.z) * e, o: s.o + (1 - s.o) * e };
+      });
+      prev.current = next; setDisp(next);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [lp, motion]);
   if (!lp) return null;
   const W = 560, H = 420, P = 44;
   const sx = (x: number) => P + (x - lp.xmin) / (lp.xmax - lp.xmin || 1) * (W - 2 * P);
@@ -127,9 +161,9 @@ function LPView({ state, action }: { state: VisualState; action?: SimulationEven
     return [sx(Math.max(lp.xmin, Math.min(lp.xmax, x1))), sy(Math.max(lp.ymin, Math.min(lp.ymax, y1))),
       sx(Math.max(lp.xmin, Math.min(lp.xmax, x2))), sy(Math.max(lp.ymin, Math.min(lp.ymax, y2)))];
   };
-  const cx0 = lp.verts.length ? lp.verts.reduce((s, v) => s + v.x, 0) / lp.verts.length : 0;
-  const cy0 = lp.verts.length ? lp.verts.reduce((s, v) => s + v.y, 0) / lp.verts.length : 0;
-  const poly = [...lp.verts].sort((p, q) => Math.atan2(p.y - cy0, p.x - cx0) - Math.atan2(q.y - cy0, q.x - cx0));
+  const cx0 = disp.length ? disp.reduce((s, v) => s + v.x, 0) / disp.length : 0;
+  const cy0 = disp.length ? disp.reduce((s, v) => s + v.y, 0) / disp.length : 0;
+  const poly = [...disp].sort((p, q) => Math.atan2(p.y - cy0, p.x - cx0) - Math.atan2(q.y - cy0, q.x - cx0));
   const n = Math.hypot(lp.cx, lp.cy) || 1, span = Math.max(lp.xmax - lp.xmin, lp.ymax - lp.ymin);
   const ax = cx0 + lp.cx / n * span * 0.22, ay = cy0 + lp.cy / n * span * 0.22;
   return <svg className="lp-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Miền nghiệm trên mặt phẳng X Y">
@@ -141,15 +175,53 @@ function LPView({ state, action }: { state: VisualState; action?: SimulationEven
     {lp.ymin <= 0 && lp.ymax >= 0 && <line x1={P} y1={sy(0)} x2={W - P / 2} y2={sy(0)} className="lp-axis"/>}
     <text x={W - P / 2} y={sy(0) - 8} className="lp-axis-label">X</text>
     <text x={sx(0) + 8} y={P / 2 + 6} className="lp-axis-label">Y</text>
-    {lp.lines.map((L, i) => { const [x1, y1, x2, y2] = seg(L.a, L.b, L.c); return <g key={i}><line x1={x1} y1={y1} x2={x2} y2={y2} className="lp-line"/><text x={x2 - 4} y={y2 - 6} className="lp-line-label">R{i + 1}</text></g>; })}
+    {lp.lines.map((L, i) => { const [x1, y1, x2, y2] = seg(L.a, L.b, L.c); return <g key={i} className="lp-line-g" style={{ animationDelay: `${i * 90}ms` }}><line x1={x1} y1={y1} x2={x2} y2={y2} className="lp-line"/><text x={x2 - 4} y={y2 - 6} className="lp-line-label">R{i + 1}</text></g>; })}
     {poly.length >= 3 && lp.status !== 'infeasible' && <polygon points={poly.map(v => `${sx(v.x)},${sy(v.y)}`).join(' ')} className="lp-poly"/>}
     <line x1={sx(cx0)} y1={sy(cy0)} x2={sx(ax)} y2={sy(ay)} className="lp-gradient" markerEnd="url(#lp-arrow)"/>
     <defs><marker id="lp-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" className="lp-arrow-head"/></marker></defs>
-    {lp.verts.map((v, i) => <g key={i} className={`lp-vertex ${i === lp.best ? 'best' : ''} ${state.active?.includes(i) ? 'active' : ''} ${action ? `a-${action}` : ''}`}>
+    {disp.map((v, i) => <g key={i} opacity={v.o} className={`lp-vertex ${i === lp.best ? 'best' : ''} ${state.active?.includes(i) ? 'active' : ''} ${action ? `a-${action}` : ''}`}>
       <circle cx={sx(v.x)} cy={sy(v.y)} r={i === lp.best ? 8 : 5.5}/>
-      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({v.x}, {v.y})</text>
+      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({lp.verts[i].x}, {lp.verts[i].y})</text>
     </g>)}
+    {disp.length > 0 && (() => { const v = disp[disp.length - 1]; return <g key={lp.verts.length} transform={`translate(${sx(v.x)},${sy(v.y)})`} className="lp-ripple"><circle r="8"/></g>; })()}
     {lp.status !== 'optimal' && <text x={W / 2} y={P} textAnchor="middle" className="lp-status">{lp.status === 'infeasible' ? 'Vô nghiệm' : 'Không giới nội'}</text>}
+  </svg>;
+}
+
+function GraphView({ state }: { state: VisualState }) {
+  const g = state.graph;
+  if (!g || g.nodes.length === 0) return null;
+  const W = 560, H = 420, P = 52;
+  const xs = g.nodes.map(n => n.x), ys = g.nodes.map(n => n.y);
+  let xmin = Math.min(...xs) - 1.2, xmax = Math.max(...xs) + 1.2, ymin = Math.min(...ys) - 1.2, ymax = Math.max(...ys) + 1.2;
+  if (xmax - xmin < 4) { const m = (xmax + xmin) / 2; xmin = m - 2; xmax = m + 2; }
+  if (ymax - ymin < 4) { const m = (ymax + ymin) / 2; ymin = m - 2; ymax = m + 2; }
+  const sx = (x: number) => P + (x - xmin) / (xmax - xmin) * (W - 2 * P);
+  const sy = (y: number) => H - P - (y - ymin) / (ymax - ymin) * (H - 2 * P);
+  const at = (id: number): [number, number] => { const n = g.nodes.find(n => n.id === id)!; return [sx(n.x), sy(n.y)]; };
+  const cur = state.active?.[0];
+  const curEnds = cur !== undefined && g.edges[cur] ? [g.edges[cur].u, g.edges[cur].v] : [];
+  const inTree = new Set(state.marked ?? []);
+  return <svg className="graph-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Đồ thị vô hướng có trọng số">
+    {g.edges.map((e, k) => {
+      const [x1, y1] = at(e.u), [x2, y2] = at(e.v);
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const cls = e.status === 'chosen' ? 'chosen' : e.status === 'current' ? 'current' : e.status === 'skipped' ? 'skipped' : (state.path?.includes(k) ? 'chosen' : 'idle');
+      return <g key={k} className={`g-edge ${cls} ${cur === k ? 'active' : ''}`}>
+        <line x1={x1} y1={y1} x2={x2} y2={y2}/>
+        <text x={mx} y={my - 7} className="g-weight">{e.w}</text>
+      </g>;
+    })}
+    {g.nodes.map(n => {
+      const [x, y] = at(n.id);
+      const named = n.label !== String(n.id + 1);
+      const hot = curEnds.includes(n.id);
+      const tree = [...inTree].some(k => g.edges[k] && (g.edges[k].u === n.id || g.edges[k].v === n.id));
+      return <g key={n.id} transform={`translate(${x},${y})`} className={`g-node ${hot ? 'active' : ''} ${tree ? 'in-tree' : ''}`}>
+        <circle r="17"/><text textAnchor="middle" dominantBaseline="central" className="g-id">{n.id + 1}</text>
+        {named && <text textAnchor="middle" y="32" className="g-name">{n.label}</text>}
+      </g>;
+    })}
   </svg>;
 }
 
@@ -159,7 +231,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
 }) {
   const isRecursive = algorithm.category === 'Quay lui';
   const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? 0);
-  const caption = algorithm.category === 'Quay lui' ? `QUAY LUI · ${algorithm.kind === 'grid' ? 'BẢNG ĐIỀU KHIỂN' : 'MẢNG LỰA CHỌN'}`
+  const caption = algorithm.category === 'Quay lui' ? (algorithm.kind === 'graph' ? 'QUAY LUI · ĐỒ THỊ' : `QUAY LUI · ${algorithm.kind === 'grid' ? 'BẢNG ĐIỀU KHIỂN' : 'MẢNG LỰA CHỌN'}`)
     : algorithm.category === 'Chia để trị' ? `CHIA ĐỂ TRỊ · ĐỆ QUY`
     : algorithm.category === 'Tối ưu' ? `TỐI ƯU · ĐỒ THỊ X–Y`
     : algorithm.category === 'Quy hoạch động' ? `QUY HOẠCH ĐỘNG · BẢNG DP`
@@ -169,7 +241,8 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
     {mode === '3d' ? <Suspense fallback={<div className="scene-loading"><span className="loading-tiles"><i/><i/><i/></span>{vi.loadingScene}</div>}><Scene3D algorithm={algorithm} state={state} motion={motion} step={step} action={action} runKey={runKey} onFallback={onFallback} playback={playback}/></Suspense> : <div className="primary-visual">
       {state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }} action={action}/></div>}</>
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
-        : state.lp ? <LPView state={state} action={action}/>
+        : state.graph ? <GraphView state={state}/>
+        : state.lp ? <LPView state={state} action={action} motion={motion}/>
         : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan'} action={action}/>
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>

@@ -34,6 +34,39 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     const midX = (lp.xmin + lp.xmax) / 2, midY = (lp.ymin + lp.ymax) / 2;
     const X = (x: number) => (x - midX) * s, Z = (y: number) => (y - midY) * s;
     nodes.push({ key: 'lp-base', index: -1, label: '', caption: `Mặt phẳng X–Y · x ${lp.xmin.toFixed(1)}..${lp.xmax.toFixed(1)}`, position: [0, 0.09, 0], size: [spanX * s + 1, 0.18, spanZ * s + 1], color: '#e9e2d2', active: false });
+    // Trục X, Y (căn giữa khung nhìn) + số nguyên dọc trục để định hướng.
+    if (lp.ymin <= 0 && lp.ymax >= 0) nodes.push({ key: 'lp-axis-x', index: -1, label: '', caption: 'Trục X', position: [0, 0.21, Z(0)], size: [spanX * s, 0.06, 0.09], color: '#8a969e', active: false });
+    if (lp.xmin <= 0 && lp.xmax >= 0) nodes.push({ key: 'lp-axis-y', index: -1, label: '', caption: 'Trục Y', position: [X(0), 0.21, 0], size: [0.09, 0.06, spanZ * s], color: '#8a969e', active: false });
+    for (let v = Math.ceil(lp.xmin); v <= lp.xmax; v++) {
+      if (Math.abs(v) > 30) continue;
+      nodes.push({ key: `lp-nx${v}`, index: -1, label: String(v), caption: `x = ${v}`, position: [X(v), 0.2, Z(Math.max(lp.ymin, Math.min(lp.ymax, 0))) + 0.42], size: [0.44, 0.05, 0.34], color: '#f7ecd2', active: false });
+    }
+    for (let v = Math.ceil(lp.ymin); v <= lp.ymax; v++) {
+      if (v === 0 || Math.abs(v) > 30) continue;
+      nodes.push({ key: `lp-ny${v}`, index: -1, label: String(v), caption: `y = ${v}`, position: [X(Math.max(lp.xmin, Math.min(lp.xmax, 0))) - 0.42, 0.2, Z(v)], size: [0.44, 0.05, 0.34], color: '#f7ecd2', active: false });
+    }
+    // Mỗi ràng buộc là một thanh nối 2 đầu mút kẹp trong khung nhìn (ống trụ vẽ hướng bất kỳ).
+    const clip = (a: number, b: number, c: number): [number, number, number, number] | null => {
+      let x1: number, y1: number, x2: number, y2: number;
+      if (Math.abs(b) >= Math.abs(a)) { x1 = lp.xmin; y1 = (c - a * x1) / b; x2 = lp.xmax; y2 = (c - a * x2) / b; }
+      else { y1 = lp.ymin; x1 = (c - b * y1) / a; y2 = lp.ymax; x2 = (c - b * y2) / a; }
+      const dx = x2 - x1, dy = y2 - y1, p = [-dx, dx, -dy, dy], q = [x1 - lp.xmin, lp.xmax - x1, y1 - lp.ymin, lp.ymax - y1];
+      let t0 = 0, t1 = 1;
+      for (let k = 0; k < 4; k++) {
+        if (Math.abs(p[k]) < 1e-12) { if (q[k] < 0) return null; }
+        else { const t = q[k] / p[k]; if (p[k] < 0) t0 = Math.max(t0, t); else t1 = Math.min(t1, t); }
+      }
+      return t0 > t1 ? null : [x1 + dx * t0, y1 + dy * t0, x1 + dx * t1, y1 + dy * t1];
+    };
+    lp.lines.forEach((L, i) => {
+      const segm = clip(L.a, L.b, L.c);
+      if (!segm) return;
+      const [x1, y1, x2, y2] = segm;
+      for (const [tag, px, py] of [['a', x1, y1], ['b', x2, y2]] as const) {
+        nodes.push({ key: `lp-l${i}${tag}`, index: -1, label: `R${i + 1}`, caption: `R${i + 1}: ${L.raw}`, position: [X(px), 0.26, Z(py)], size: [0.4, 0.16, 0.4], color: '#7d8a92', active: false });
+      }
+      links.push({ from: `lp-l${i}a`, to: `lp-l${i}b`, highlighted: false });
+    });
     const cx0 = lp.verts.length ? lp.verts.reduce((t, v) => t + v.x, 0) / lp.verts.length : midX;
     const cy0 = lp.verts.length ? lp.verts.reduce((t, v) => t + v.y, 0) / lp.verts.length : midY;
     const order = lp.verts.map((_, i) => i).sort((p, q) => Math.atan2(lp.verts[p].y - cy0, lp.verts[p].x - cx0) - Math.atan2(lp.verts[q].y - cy0, lp.verts[q].x - cx0));
@@ -58,6 +91,39 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     nodes.push({ key: 'lp-origin', index: -1, label: 'Z', caption: `Hướng tăng Z (${lp.cx}, ${lp.cy})`, position: [X(cx0), 0.3, Z(cy0)], size: [0.5, 0.24, 0.5], color: '#c0392b', active: false });
     nodes.push({ key: 'lp-tip', index: -1, label: '→', caption: `Hướng tăng Z (${lp.cx}, ${lp.cy})`, position: [X(tx), 0.3, Z(ty)], size: [0.5, 0.24, 0.5], color: '#e9a390', active: false });
     links.push({ from: 'lp-origin', to: 'lp-tip', highlighted: true });
+    return { nodes, links };
+  }
+  if (state.graph && state.graph.nodes.length > 0) {
+    const gp = state.graph;
+    const gxs = gp.nodes.map(n => n.x), gys = gp.nodes.map(n => n.y);
+    const gx0 = Math.min(...gxs), gx1 = Math.max(...gxs), gy0 = Math.min(...gys), gy1 = Math.max(...gys);
+    const gspanX = Math.max(1, gx1 - gx0), gspanZ = Math.max(1, gy1 - gy0);
+    const gs = Math.min(7 / gspanX, 7 / gspanZ);
+    const gmidX = (gx0 + gx1) / 2, gmidY = (gy0 + gy1) / 2;
+    const GX = (x: number) => (x - gmidX) * gs, GZ = (y: number) => (y - gmidY) * gs;
+    const curEdge = state.active?.[0];
+    const curEnds = curEdge !== undefined && gp.edges[curEdge] ? [gp.edges[curEdge].u, gp.edges[curEdge].v] : [];
+    gp.nodes.forEach(n => {
+      const hot = curEnds.includes(n.id);
+      const tree = (state.marked ?? []).some(k => gp.edges[k] && (gp.edges[k].u === n.id || gp.edges[k].v === n.id));
+      nodes.push({
+        key: `g-n${n.id}`, index: n.id, label: String(n.id + 1), caption: `${n.label} · đỉnh ${n.id + 1}`,
+        position: [GX(n.x), 0.45 + (hot ? 0.42 : 0), GZ(n.y)], size: [0.72, 0.6, 0.72],
+        color: hot ? activeColor : tree ? '#8bcbb9' : palette.base, active: hot,
+      });
+    });
+    gp.edges.forEach((e, k) => {
+      const a = gp.nodes.find(n => n.id === e.u)!, b = gp.nodes.find(n => n.id === e.v)!;
+      const chosen = e.status === 'chosen' || gp.best.includes(k);
+      const hot = curEdge === k;
+      nodes.push({
+        key: `g-e${k}`, index: -1, label: String(e.w),
+        caption: `Cạnh ${k + 1}: ${a.label}–${b.label} · w=${e.w}${chosen ? ' · trong cây' : ''}${e.status === 'skipped' ? ' · đã bỏ' : ''}`,
+        position: [(GX(a.x) + GX(b.x)) / 2, 0.16, (GZ(a.y) + GZ(b.y)) / 2], size: [0.55, 0.14, 0.4],
+        color: hot ? activeColor : chosen ? '#259b7c' : e.status === 'skipped' ? '#d3dbdf' : '#f7ecd2', active: false,
+      });
+      links.push({ from: `g-n${e.u}`, to: `g-n${e.v}`, highlighted: chosen || hot });
+    });
     return { nodes, links };
   }
   if (algorithm.id === 'vach-thuoc' && state.grid && state.grid.length > 0 && (state.grid[0]?.length ?? 0) > 0) {
