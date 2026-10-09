@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 19 original modules', () => {
-    expect(algorithms).toHaveLength(19);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(19);
+  it('contains all 20 original modules', () => {
+    expect(algorithms).toHaveLength(20);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(20);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -149,6 +149,15 @@ describe('DP and data structures', () => {
     expect(run('quy-hoach-tuyen-tinh', minParsed).outputs[0]).toContain('2');
     expect(a.validate({ cx: 1, cy: 1, sense: 'max', cons: [] })).not.toBeNull();
   });
+  it('fills the LCS table and traces back cbadt', () => {
+    const a = findAlgorithm('day-con-chung-dai-nhat');
+    expect(run('day-con-chung-dai-nhat', { a: 'abcbadt', b: 'cbkadt' }).outputs).toEqual(['5', 'cbadt']);
+    expect(run('day-con-chung-dai-nhat', a.presets[1].input).outputs).toEqual(['4', 'algo']);
+    expect(run('day-con-chung-dai-nhat', a.presets[2].input).outputs).toEqual(['0', '']);
+    const { state } = run('day-con-chung-dai-nhat', { a: 'abcbadt', b: 'cbkadt' });
+    expect((state.path ?? []).length).toBe(5);
+    expect(a.validate({ a: 'x'.repeat(31), b: 'y' })).not.toBeNull();
+  });
   it('finds the MST by backtracking, prunes cycles and reports disconnects', () => {
     const a = findAlgorithm('cay-khung-nho-nhat');
     const { state, outputs } = run('cay-khung-nho-nhat', a.presets[0].input);
@@ -204,6 +213,7 @@ describe('custom input parsers', () => {
     'vach-thuoc': '8 3',
     'quy-hoach-tuyen-tinh': 'max 3x + 2y\n2x + y <= 10\nx + 2y <= 8\nx >= 0\ny >= 0',
     'cay-khung-nho-nhat': '9 10\n1 2 6\n2 3 9\n1 4 14\n2 7 5\n2 5 12\n4 6 3\n4 7 8\n5 8 7\n7 8 10\n8 9 15',
+    'day-con-chung-dai-nhat': 'abcbadt\ncbkadt',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

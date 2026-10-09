@@ -65,7 +65,7 @@ function Grid({ state, sudoku = false, heatmap = false, action }: { state: Visua
     {state.columnLabels && <div className="matrix-row column-labels"><span/>{state.columnLabels.map((label, c) => <span key={c}>{label}</span>)}</div>}
     {state.grid?.map((row, r) => <div className="matrix-row" key={r}>
       {state.rowLabels && <span className="row-label">{state.rowLabels[r]}</span>}
-      {row.map((value, c) => <div key={c} className={`grid-cell ${value === '*' ? 'blocked' : ''} ${cellClass(state, r * columns + c, action)} ${sudoku && c % 3 === 2 && c !== 8 ? 'box-right' : ''} ${sudoku && r % 3 === 2 && r !== 8 ? 'box-bottom' : ''}`} style={heatmap && typeof value === 'number' && value > 0 && !state.active?.includes(r * columns + c) && !state.marked?.includes(r * columns + c) ? { backgroundColor: `rgba(55,139,188,${Math.min(.3, Math.log2(value + 1) * .045)})` } : undefined} aria-label={`Ô ${r + 1}, ${c + 1}: ${value}`}>
+      {row.map((value, c) => <div key={c} className={`grid-cell ${value === '*' ? 'blocked' : ''} ${cellClass(state, r * columns + c, action)} ${sudoku && c % 3 === 2 && c !== 8 ? 'box-right' : ''} ${sudoku && r % 3 === 2 && r !== 8 ? 'box-bottom' : ''}`} style={heatmap && typeof value === 'number' && value > 0 && !state.active?.includes(r * columns + c) && !state.marked?.includes(r * columns + c) && !state.path?.includes(r * columns + c) ? { backgroundColor: `rgba(55,139,188,${Math.min(.3, Math.log2(value + 1) * .045)})` } : undefined} aria-label={`Ô ${r + 1}, ${c + 1}: ${value}`}>
         {value === '*' ? '×' : sudoku && value === 'X' ? '·' : cellText(value)}
       </div>)}
     </div>)}
@@ -288,7 +288,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
         : state.graph ? <GraphView state={state}/>
         : state.lp ? <LPView state={state} action={action} motion={motion}/>
-        : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan'} action={action}/>
+        : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan' || algorithm.id === 'day-con-chung-dai-nhat'} action={action}/>
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>
           : <ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/>}
