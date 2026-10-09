@@ -18,6 +18,14 @@ describe('history storage', () => {
     const old = await new Promise(resolve => { const request = db.transaction('frames').objectStore('frames').get([run, 1]); request.onsuccess = () => resolve(request.result); });
     expect(old).toBeUndefined(); db.close(); expect(await b.get(1)).toEqual(frame(9)); await b.close();
   });
+  it('writes a batch in one go and keeps outputs aligned', async () => {
+    vi.stubGlobal('indexedDB', new IDBFactory()); vi.stubGlobal('IDBKeyRange', IDBKeyRange);
+    const history = new History(); await history.open();
+    await history.putMany([{ index: 1, frame: frame(1) }, { index: 2, frame: frame(2, true) }, { index: 3, frame: frame(3) }]);
+    expect(await history.get(3)).toEqual(frame(3));
+    expect(await history.getOutputs(0, 8)).toEqual([{ text: '1 2 3', step: 2 }]);
+    await history.close();
+  });
   it('bounds the memory fallback, warns, and never evicts existing steps', async () => {
     vi.stubGlobal('indexedDB', undefined);
     const history = new History(); await history.open(); expect(history.warning).toContain('2.000');

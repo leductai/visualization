@@ -31,18 +31,26 @@ export class History {
   }
 
   async put(index: number, frame: Frame) {
+    return this.putMany([{ index, frame }]);
+  }
+
+  /** Ghi gộp cả đợt trong MỘT transaction thay vì một transaction mỗi bước. */
+  async putMany(entries: { index: number; frame: Frame }[]) {
     if (this.closed) throw new Error('Lịch sử đã đóng.');
-    const output = frame.event.action === 'output' ? { text: (frame.event.statePatch.outputs ?? []).join('\n'), step: index } : undefined;
     if (!this.db) {
-      if (this.memory.size >= FALLBACK_LIMIT && !this.memory.has(index)) throw new Error('Bộ nhớ lịch sử đã đầy. Đã dừng và giữ nguyên các bước đã xem.');
-      this.memory.set(index, structuredClone(frame));
-      if (output) this.outputs.set(frame.outputCount, output);
+      for (const { index, frame } of entries) {
+        if (this.memory.size >= FALLBACK_LIMIT && !this.memory.has(index)) throw new Error('Bộ nhớ lịch sử đã đầy. Đã dừng và giữ nguyên các bước đã xem.');
+        this.memory.set(index, structuredClone(frame));
+        if (frame.event.action === 'output') this.outputs.set(frame.outputCount, { text: (frame.event.statePatch.outputs ?? []).join('\n'), step: index });
+      }
       return;
     }
     await new Promise<void>((resolve, reject) => {
       const tx = this.db!.transaction(['frames', 'outputs'], 'readwrite');
-      tx.objectStore('frames').put(frame, [this.run, index]);
-      if (output) tx.objectStore('outputs').put(output, [this.run, frame.outputCount]);
+      for (const { index, frame } of entries) {
+        tx.objectStore('frames').put(frame, [this.run, index]);
+        if (frame.event.action === 'output') tx.objectStore('outputs').put({ text: (frame.event.statePatch.outputs ?? []).join('\n'), step: index }, [this.run, frame.outputCount]);
+      }
       tx.oncomplete = () => resolve();
       tx.onerror = tx.onabort = () => reject(new Error('Không lưu được lịch sử, có thể bộ nhớ trình duyệt đã đầy. Đã dừng và giữ nguyên lịch sử.'));
     });

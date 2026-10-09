@@ -14,14 +14,4 @@ export class SimulationRunner {
     }
     return { type: 'batch' as const, events, done };
   }
-  nextAll(detail: Detail) {
-    const events: SimulationEvent[] = [];
-    let done = false;
-    while (!done) {
-      const res = this.next(64, detail);
-      events.push(...res.events);
-      done = res.done;
-    }
-    return { type: 'batch' as const, events, done: true };
-  }
 }
