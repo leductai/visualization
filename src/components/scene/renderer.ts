@@ -53,7 +53,10 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
   const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2(), up = new THREE.Vector3(0, 1, 0);
   let hovered: Actor | undefined;
 
-  function fit() {
+  // hard = true chỉ dùng cho nút "Đặt lại góc nhìn": dựng lại đúng góc mặc định.
+  // Các lần fit còn lại (thêm nút, resize) giữ nguyên hướng xoay + zoom của người dùng,
+  // chỉ căn lại tâm và khung nhìn — nếu không mỗi bước mô hình lại nhảy về vị trí cũ.
+  function fit(hard = false) {
     const bounds = new THREE.Box3();
     actors.forEach(actor => {
       const half = new THREE.Vector3(...actor.descriptor.size).multiplyScalar(.5), point = new THREE.Vector3(...actor.descriptor.position);
@@ -63,7 +66,10 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
     const gridOnly = [...actors.keys()].every(key => key.startsWith('cell-') || key.startsWith('axis-'));
     bounds.max.y = Math.max(bounds.max.y + .35, gridOnly ? .95 : 2.3);
     const center = bounds.getCenter(new THREE.Vector3()); center.y = gridOnly ? .18 : .65;
-    camera.position.copy(center).add(new THREE.Vector3(5.5, 10, 9)); camera.lookAt(center); controls.target.copy(center);
+    const offset = camera.position.clone().sub(controls.target);
+    if (hard || offset.lengthSq() < 1e-6) offset.set(5.5, 10, 9);
+    const prevZoom = hard ? 1 : (camera.zoom || 1);
+    camera.position.copy(center).add(offset); camera.lookAt(center); controls.target.copy(center);
     camera.updateMatrixWorld();
     let maxX = 0, maxY = 0;
     for (const x of [bounds.min.x, bounds.max.x]) for (const y of [0, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
@@ -73,7 +79,7 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
     const aspect = Math.max(.2, host.clientWidth / Math.max(1, host.clientHeight));
     const height = Math.max(maxY, maxX / aspect, 1.8) * 1.18;
     camera.top = height; camera.bottom = -height; camera.left = -height * aspect; camera.right = height * aspect;
-    camera.zoom = 1; camera.updateProjectionMatrix(); controls.update(); dirty = true;
+    camera.zoom = THREE.MathUtils.clamp(prevZoom, .65, 2.6); camera.updateProjectionMatrix(); controls.update(); dirty = true;
   }
 
   function removeActor(actor: Actor) {
@@ -166,7 +172,7 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
   renderer.setSize(host.clientWidth, Math.max(1, host.clientHeight)); update(initial);
   return {
     update,
-    reset: () => { fit(); wake(); },
+    reset: () => { fit(true); wake(); },
     zoom: (factor: number) => { camera.zoom = THREE.MathUtils.clamp(camera.zoom * factor, .65, 2.6); camera.updateProjectionMatrix(); dirty = true; wake(); },
     spin: (enabled: boolean) => { spin = enabled && !reducedMotion; dirty = true; wake(); },
     dispose: () => {
