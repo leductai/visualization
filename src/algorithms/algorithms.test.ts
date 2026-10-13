@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 22 modules', () => {
-    expect(algorithms).toHaveLength(22);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(22);
+  it('contains all 23 modules', () => {
+    expect(algorithms).toHaveLength(23);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(23);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -116,6 +116,15 @@ describe('backtracking semantics', () => {
     expect(run('tim-duong-di', a.presets[0].input).state.result).toContain('3 đường');
     expect(a.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 0 }], start: 'A', end: 'B' })).not.toBeNull();
     expect(a.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 1 }, { u: 0, v: 1 }], start: 'A', end: 'B' })).not.toBeNull();
+  });
+  it('merge sorts right-half first and records only changed merges', () => {
+    expect(run('sap-xep-tron', { values: [8, 3, 4, 5, 9, 1, 12, 7] }).outputs).toEqual([
+      '8 3 4 5 9 1 7 12', '8 3 4 5 1 9 7 12', '8 3 4 5 1 7 9 12',
+      '3 8 4 5 1 7 9 12', '3 4 5 8 1 7 9 12', '1 3 4 5 7 8 9 12',
+    ]);
+    expect(run('sap-xep-tron', { values: [1, 2, 3, 4] }).outputs).toEqual([]);
+    expect(run('sap-xep-tron', { values: [3, 1, 2] }).outputs).toEqual(['1 3 2', '1 2 3']);
+    expect(findAlgorithm('sap-xep-tron').parseInput('8 3 4 5 9 1 12 7')).toEqual({ values: [8, 3, 4, 5, 9, 1, 12, 7] });
   });
   it('enumerates binary strings in 0-then-1 DFS order', () => {
     expect(run('liet-ke-nhi-phan', { n: 3 }).outputs).toEqual([
@@ -234,6 +243,7 @@ describe('custom input parsers', () => {
     'day-con-chung-dai-nhat': 'abcbadt\ncbkadt',
     'tim-duong-di': '6 13\nW K I U M Q\nW M\nW Q\nI W\nI K\nI U\nI M\nU W\nU K\nU Q\nM U\nM Q\nQ I\nQ M\nU I',
     'liet-ke-nhi-phan': '3',
+    'sap-xep-tron': '8\n8 3 4 5 9 1 12 7',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

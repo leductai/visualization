@@ -291,8 +291,8 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
   algorithm: Algorithm; state: VisualState; mode: '2d' | '3d'; motion: boolean; step: number; action?: SimulationEvent['action']; runKey: string; onFallback: () => void;
   playback: ScenePlayback; total: number; onSeek: (index: number) => void;
 }) {
-  const isRecursive = algorithm.category === 'Quay lui';
-  const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? 0);
+  const isRecursive = algorithm.category === 'Quay lui' || algorithm.category === 'Chia để trị';
+  const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? state.variables?.doSau ?? 0);
   // Thu/phóng sơ đồ 2D: co theo layout nên thanh cuộn cập nhật theo.
   const [zoom, setZoom] = useState(1);
   const bodyRef = useRef<HTMLDivElement>(null);

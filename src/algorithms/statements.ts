@@ -16,6 +16,7 @@ import daycontangdainhat from '../../webcode2/daycontangdainhat.md?raw';
 import daicontangdainhat2 from '../../webcode2/daicontangdainhat2.md?raw';
 import timDuongDi from '../../webcode2/tim_duong_di.md?raw';
 import lietKeNhiPhan from '../../webcode/liet-ke-nhi-phan.txt?raw';
+import sapXepTron from '../../webcode2/merge_sort.md?raw';
 
 /** Đề bài gốc theo id thuật toán. 4 bài (vach-thuoc, quy-hoach-tuyen-tinh,
  *  cay-khung-nho-nhat, day-con-chung-dai-nhat) chưa có file đề nên App dùng
@@ -39,4 +40,5 @@ export const statements: Record<string, string> = {
   'daicontangdainhat2': daicontangdainhat2,
   'tim-duong-di': timDuongDi,
   'liet-ke-nhi-phan': lietKeNhiPhan,
+  'sap-xep-tron': sapXepTron,
 };

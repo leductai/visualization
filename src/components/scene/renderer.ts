@@ -102,10 +102,17 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
         group.position.copy(actor.target); if (!reducedMotion && animate) group.position.y -= .7;
         body.scale.copy(actor.scale); actors.set(node.key, actor);
       }
-      if (actor.descriptor.label !== node.label || !actor.texture) {
+      // Ô vừa đổi giá trị (đặt số mới, đổi chỗ hai số): nảy lên để dễ nhìn.
+      // Vị trí tự trôi về đích nhờ lerp; chặn trần để chạy nhanh không bay chồng.
+      const changed = Boolean(actor.texture) && actor.descriptor.label !== node.label;
+      if (changed || !actor.texture) {
         actor.texture?.dispose(); actor.texture = labelTexture(node.label); actor.face.material.map = actor.texture; actor.face.material.needsUpdate = true;
       }
       actor.descriptor = node; actor.target.set(...node.position); actor.scale.set(...node.size);
+      if (changed && !reducedMotion && animate) {
+        actor.group.position.y = Math.max(actor.group.position.y, actor.target.y + 0.85);
+        dirty = true; wake();
+      }
       if (reducedMotion || !animate) { actor.group.position.copy(actor.target); actor.body.scale.copy(actor.scale); actor.body.material.color.set(node.color); }
       actor.face.scale.set(Math.min(node.size[0] * .88, 2.2), .82, 1);
       actor.group.userData.caption = node.caption;
