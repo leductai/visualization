@@ -21,6 +21,8 @@ import { dayConChungDaiNhat } from './day-con-chung-dai-nhat';
 import { timDuongDi } from './tim-duong-di';
 import { lietKeNhiPhan } from './liet-ke-nhi-phan';
 import { sapXepTron } from './sap-xep-tron';
+import { sapXepNhanh } from './sap-xep-nhanh';
+import { sapHang2d } from './sap-hang-2d';
 
 export const algorithms = [
   sinhHoanVi,
@@ -46,6 +48,8 @@ export const algorithms = [
   timDuongDi,
   lietKeNhiPhan,
   sapXepTron,
+  sapXepNhanh,
+  sapHang2d,
 ];
 
 export const findAlgorithm = (id: string) => algorithms.find(a => a.id === id) ?? algorithms[0];

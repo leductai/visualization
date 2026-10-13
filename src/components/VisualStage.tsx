@@ -128,6 +128,40 @@ function DecisionTree({ nodes }: { nodes: DecisionNode[] }) {
   </div>;
 }
 
+function ScatterView({ state }: { state: VisualState }) {
+  const pts = state.points ?? [];
+  if (!pts.length) return <span className="empty-value">∅</span>;
+  const W = 560, H = 400, P = 46;
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const padX = (x1 - x0) * 0.12 + 0.5, padY = (y1 - y0) * 0.12 + 0.5;
+  const xmin = x0 - padX, xmax = x1 + padX, ymin = y0 - padY, ymax = y1 + padY;
+  const sx = (x: number) => P + (x - xmin) / (xmax - xmin || 1) * (W - 2 * P);
+  const sy = (y: number) => H - P - (y - ymin) / (ymax - ymin || 1) * (H - 2 * P);
+  const cur = state.active?.[0];
+  const ranks = state.values ?? [];
+  const xticks = [...new Set([x0, (x0 + x1) / 2, x1])], yticks = [...new Set([y0, (y0 + y1) / 2, y1])];
+  const r2 = (v: number) => String(Math.round(v * 100) / 100);
+  return <div className="scatter-wrap">
+    <span className="data-label">Mặt phẳng X–Y (vùng tô = các điểm bị trội hơn)</span>
+    <svg className="scatter-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Biểu đồ tán xạ ${pts.length} điểm`}>
+      {xticks.map(v => <line key={`gx${v}`} x1={sx(v)} y1={P / 2} x2={sx(v)} y2={H - P} className="s-grid" />)}
+      {yticks.map(v => <line key={`gy${v}`} x1={P} y1={sy(v)} x2={W - P / 2} y2={sy(v)} className="s-grid" />)}
+      {xticks.map(v => <text key={`tx${v}`} x={sx(v)} y={H - P + 16} className="s-tick">{r2(v)}</text>)}
+      {yticks.map(v => <text key={`ty${v}`} x={P - 8} y={sy(v) + 4} className="s-tick">{r2(v)}</text>)}
+      {xmin <= 0 && xmax >= 0 && <line x1={sx(0)} y1={P / 2} x2={sx(0)} y2={H - P} className="s-axis" />}
+      {ymin <= 0 && ymax >= 0 && <line x1={P} y1={sy(0)} x2={W - P / 2} y2={sy(0)} className="s-axis" />}
+      {cur !== undefined && pts[cur] && <rect x={sx(xmin)} y={sy(pts[cur].y)} width={Math.max(0, sx(pts[cur].x) - sx(xmin))} height={Math.max(0, sy(ymin) - sy(pts[cur].y))} className="scatter-zone" />}
+      {pts.map((p, i) => <g key={i} transform={`translate(${sx(p.x)},${sy(p.y)})`} className={`s-node ${state.active?.includes(i) ? 'active' : ''} ${state.marked?.includes(i) ? 'marked' : ''}`}>
+        <circle r="13" />
+        <text textAnchor="middle" dominantBaseline="central" className="s-label">{p.label}</text>
+        <text textAnchor="middle" y="27" className="s-rank">hạng {String(ranks[i] ?? 0)}</text>
+      </g>)}
+    </svg>
+    <div className="legend"><span className="legend-active">Đang xét</span><span className="legend-marked">Đóng góp</span></div>
+  </div>;
+}
+
 function RulerView({ state }: { state: VisualState }) {
   const grid = state.grid;
   if (!grid || grid.length === 0) return <span className="empty-value">∅ Chưa có vạch nào (h = 0).</span>;
@@ -351,6 +385,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
         : state.graph ? <><GraphView state={state}/>{state.decision && <DecisionTree nodes={state.decision}/>}</>
         : state.lp ? <LPView state={state} action={action} motion={motion}/>
+        : state.points ? <><ScatterView state={state}/><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/></>
         : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan' || algorithm.id === 'day-con-chung-dai-nhat'} action={action}/>
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>

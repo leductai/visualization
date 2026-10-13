@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 23 modules', () => {
-    expect(algorithms).toHaveLength(23);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(23);
+  it('contains all 25 modules', () => {
+    expect(algorithms).toHaveLength(25);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(25);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -125,6 +125,30 @@ describe('backtracking semantics', () => {
     expect(run('sap-xep-tron', { values: [1, 2, 3, 4] }).outputs).toEqual([]);
     expect(run('sap-xep-tron', { values: [3, 1, 2] }).outputs).toEqual(['1 3 2', '1 2 3']);
     expect(findAlgorithm('sap-xep-tron').parseInput('8 3 4 5 9 1 12 7')).toEqual({ values: [8, 3, 4, 5, 9, 1, 12, 7] });
+  });
+  it('quicksorts with Lomuto partition and records changed partitions', () => {
+    expect(run('sap-xep-nhanh', { values: [8, 3, 4, 5, 9, 1, 12, 7] }).outputs).toEqual([
+      '3 4 5 1 7 8 12 9', '1 4 5 3 7 8 12 9', '1 3 5 4 7 8 12 9',
+      '1 3 4 5 7 8 12 9', '1 3 4 5 7 8 9 12',
+    ]);
+    expect(run('sap-xep-nhanh', { values: [1, 2, 3, 4] }).outputs).toEqual([]);
+    expect(run('sap-xep-nhanh', { values: [3, 1, 2] }).outputs).toEqual(['1 2 3']);
+  });
+  it('ranks 2D dominance with CDQ and Fenwick', () => {
+    expect(run('sap-hang-2d', findAlgorithm('sap-hang-2d').presets[0].input).outputs).toEqual([
+      'A 0', 'B 1', 'C 1', 'D 3', 'E 0',
+    ]);
+    expect(run('sap-hang-2d', findAlgorithm('sap-hang-2d').presets[1].input).outputs).toEqual(['A 0', 'B 0', 'C 0']);
+    expect(run('sap-hang-2d', { points: [{ label: 'P', x: -3, y: -3 }] }).outputs).toEqual(['P 0']);
+    // Đối chứng brute-force trên dữ liệu ngẫu nhiên (kể cả tọa độ âm và trùng x/y dày đặc).
+    let seed = 42;
+    const rnd = (m: number) => { seed = (seed * 16807) % 2147483647; return seed % m; };
+    for (let t = 0; t < 40; t++) {
+      const range = t < 20 ? 7 : 3;
+      const n = 1 + rnd(8), points = Array.from({ length: n }, (_, i) => ({ label: `P${i}`, x: rnd(range) - 2, y: rnd(range) - 2 }));
+      const expected = points.map(p => `${p.label} ${points.filter(q => p.x > q.x && p.y > q.y).length}`);
+      expect(run('sap-hang-2d', { points }).outputs).toEqual(expected);
+    }
   });
   it('enumerates binary strings in 0-then-1 DFS order', () => {
     expect(run('liet-ke-nhi-phan', { n: 3 }).outputs).toEqual([
@@ -244,6 +268,8 @@ describe('custom input parsers', () => {
     'tim-duong-di': '6 13\nW K I U M Q\nW M\nW Q\nI W\nI K\nI U\nI M\nU W\nU K\nU Q\nM U\nM Q\nQ I\nQ M\nU I',
     'liet-ke-nhi-phan': '3',
     'sap-xep-tron': '8\n8 3 4 5 9 1 12 7',
+    'sap-xep-nhanh': '8\n8 3 4 5 9 1 12 7',
+    'sap-hang-2d': '5\nA 1 1\nB 2 3\nC 3 2\nD 4 4\nE 5 0',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

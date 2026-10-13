@@ -167,6 +167,57 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     });
     return { nodes, links };
   }
+  if (state.points && state.points.length > 0 && !state.grid && !state.edges) {
+    // Sắp hạng 2D: dựng mặt phẳng tán xạ — cột mọc theo hạng, quạt nối tới
+    // điểm đóng góp, tấm nền là vùng bị điểm đang xét trội hơn.
+    const pts = state.points.slice(0, 400);
+    const allX = state.points.map(p => p.x), allZ = state.points.map(p => p.y);
+    const x0 = Math.min(...allX), x1 = Math.max(...allX), z0 = Math.min(...allZ), z1 = Math.max(...allZ);
+    const spanX = Math.max(1, x1 - x0), spanZ = Math.max(1, z1 - z0);
+    const s = Math.min(7.5 / spanX, 7.5 / spanZ);
+    const midX = (x0 + x1) / 2, midZ = (z0 + z1) / 2;
+    const X = (x: number) => (x - midX) * s, Z = (z: number) => (z - midZ) * s;
+    const ranks = pts.map((_, i) => Number(state.values?.[i] ?? 0));
+    const maxRank = Math.max(0, ...ranks);
+    const H = (r: number) => 0.5 + 0.8 * Math.min(Math.max(0, r), 12);
+    // Cột càng cao càng ấm: trộn màu nền sang vàng theo hạng tương đối.
+    const mix = (c1: string, c2: string, t: number) => {
+      const p = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+      const [a, b] = [p(c1), p(c2)];
+      return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('');
+    };
+    const tint = (r: number) => mix(palette.base, '#d99a22', r > 0 && maxRank > 0 ? 0.25 + 0.6 * (r / maxRank) : 0);
+    nodes.push({ key: 'rank-base', index: -1, label: '', caption: `Mặt phẳng X–Y · ${pts.length} điểm · hạng cao nhất ${maxRank}`, position: [0, 0.09, 0], size: [spanX * s + 1, 0.18, spanZ * s + 1], color: '#e9e2d2', active: false });
+    const cur = state.active?.[0];
+    if (cur !== undefined && pts[cur]) {
+      const q = pts[cur];
+      nodes.push({
+        key: 'rank-zone', index: -1, label: '', caption: `Vùng bị ${q.label} trội hơn (x ≤ ${q.x}, y ≤ ${q.y})`,
+        position: [(X(x0) + X(q.x)) / 2, 0.16, (Z(z0) + Z(q.y)) / 2],
+        size: [Math.max(0.4, (q.x - x0) * s + 0.5), 0.08, Math.max(0.4, (q.y - z0) * s + 0.5)],
+        color: '#cfe8da', active: false,
+      });
+    }
+    pts.forEach((p, i) => {
+      const r = ranks[i], isActive = state.active?.includes(i) ?? false;
+      const isMax = r === maxRank && maxRank > 0;
+      const h = H(r);
+      nodes.push({
+        key: `rank-p${i}`, index: i, label: `${p.label}${r}`,
+        caption: `${p.label} (${p.x}, ${p.y}) · hạng ${r}${isMax ? ' · cao nhất' : ''}`,
+        position: [X(p.x), 0.18 + h / 2 + (isActive ? 0.42 : 0), Z(p.y)],
+        size: [1.0, h, 1.0],
+        color: isActive ? activeColor : isMax ? '#d99a22' : state.marked?.includes(i) ? '#f0c999' : tint(r),
+        active: isActive,
+      });
+    });
+    if (cur !== undefined && pts[cur]) {
+      for (const m of state.marked ?? []) {
+        if (m !== cur && pts[m]) links.push({ from: `rank-p${cur}`, to: `rank-p${m}`, highlighted: true });
+      }
+    }
+    return { nodes, links };
+  }
   if (algorithm.id === 'vach-thuoc' && state.grid && state.grid.length > 0 && (state.grid[0]?.length ?? 0) > 0) {
     const rows = state.grid.length, cols = state.grid[0].length;
     const marks: (number | null)[] = Array(cols).fill(null);

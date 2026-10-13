@@ -217,6 +217,18 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .decision-legend .lg-accepted:before { background: #dff0e9; border-color: #259b7c; }
 .decision-legend .lg-pruned:before { background: #fbeae6; border-color: #c96f52; }
 .decision-note { text-align: center; font-size: 10px; color: #97593f; margin-top: 6px; }
+.scatter-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.scatter-svg { width: 100%; max-width: 620px; }
+.s-grid { stroke: #e3eaee; stroke-width: 1; }
+.s-axis { stroke: #53616b; stroke-width: 1.6; }
+.s-tick { font: 10px Consolas, monospace; fill: #8a969e; text-anchor: middle; }
+.scatter-zone { fill: rgba(64, 157, 115, .1); stroke: #3f9d73; stroke-width: 1.2; stroke-dasharray: 5 3; }
+.s-node circle { fill: #eef4f7; stroke: #8a9aa4; stroke-width: 2; }
+.s-node .s-label { fill: #33414f; font: 700 12px Consolas, monospace; }
+.s-node .s-rank { fill: #64727b; font: 10px Consolas, monospace; }
+.s-node.active circle { fill: #bff0dd; stroke: #12705a; stroke-width: 3; }
+.s-node.marked circle { fill: #fbeae6; stroke: #c96f52; }
+.scatter-wrap .legend { margin-top: 6px; }
 .ancestor-table { margin-top: 20px; overflow-x: auto; }
 .secondary-visual.secondary-3d { margin: 12px 16px; }
 .nav-backdrop { display: none; }
