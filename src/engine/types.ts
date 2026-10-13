@@ -5,7 +5,7 @@ export interface LPVertex { x: number; y: number; z: number; }
 export interface LPState { cx: number; cy: number; sense: 'max' | 'min'; lines: LPLine[]; verts: LPVertex[]; best: number; xmin: number; xmax: number; ymin: number; ymax: number; status: 'optimal' | 'infeasible' | 'unbounded'; }
 export interface GraphNode { id: number; label: string; x: number; y: number; }
 export interface GraphEdge { u: number; v: number; w: number; status: 'undecided' | 'chosen' | 'skipped' | 'current'; }
-export interface GraphState { nodes: GraphNode[]; edges: GraphEdge[]; best: number[]; bestTotal: number | null; }
+export interface GraphState { nodes: GraphNode[]; edges: GraphEdge[]; best: number[]; bestTotal: number | null; directed?: boolean; }
 export interface DecisionNode { id: number; parent: number | null; label: string; status: 'root' | 'current' | 'accepted' | 'pruned'; depth: number; }
 export interface VisualState { values?: Cell[]; secondary?: Cell[]; secondaryLabel?: string; grid?: Cell[][]; active?: number[]; marked?: number[]; path?: number[]; variables?: Record<string, Cell>; result?: string; labels?: string[]; rowLabels?: string[]; columnLabels?: string[]; edges?: number[][]; outputs?: string[]; intervals?: { start: number; end: number; value: number }[]; lp?: LPState; graph?: GraphState; decision?: DecisionNode[]; }
 export interface SimulationEvent { action: 'check' | 'accept' | 'reject' | 'update' | 'undo' | 'output' | 'complete'; explanation: string; statePatch: VisualState; line: number; cppLine: number; depth?: number; detail?: boolean; }

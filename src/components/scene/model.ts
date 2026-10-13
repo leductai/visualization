@@ -107,7 +107,7 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     links.push({ from: 'lp-origin', to: 'lp-tip', highlighted: true });
     return { nodes, links };
   }
-  if (state.decision && state.decision.length > 0 && state.decision.length <= 350) {
+  if (!state.graph && state.decision && state.decision.length > 0 && state.decision.length <= 350) {
     // Cây quyết định quay lui: xếp theo tầng sâu, hiểu ngay nhánh nào đang đi / cắt.
     const shown = state.decision.slice(0, 350);
     const maxDepth = Math.max(0, ...shown.map(n => n.depth));

@@ -7,6 +7,8 @@ import { VisualStage } from './components/VisualStage';
 import { OutputPanel } from './components/OutputPanel';
 import { useMotion } from './components/useMotion';
 import { THEMES, useTheme, type ThemeId } from './components/useTheme';
+import { statements } from './algorithms/statements';
+import { StatementView } from './components/StatementView';
 import type { Algorithm } from './engine/types';
 import './styles.css';
 import './motion.css';
@@ -129,6 +131,7 @@ export default function App() {
       <div className="content"><section className="intro" key={algorithm.id}><div><p className="kicker">BÀI TOÁN {String(algorithms.indexOf(algorithm) + 1).padStart(2, '0')} / {String(algorithms.length).padStart(2, '0')}</p><h2>{algorithm.description}</h2><p className="goal">{algorithm.goal}</p><div className="tags">{algorithm.tags.map(tag => <span key={tag}>{tag}</span>)}<span className="complexity">{algorithm.complexity}</span></div></div>
         <div className="preset-box"><label htmlFor="preset">ĐẦU VÀO MẪU</label><select id="preset" value={safePreset} onChange={e => setPreset(Number(e.target.value))}>{algorithm.presets.map((p, i) => <option value={i} key={p.name}>{p.name}</option>)}</select><small>{algorithm.presets[safePreset].summary}</small></div>
       </section>
+      <details className="input-detail problem-statement" open><summary>Đề bài</summary><div className="statement"><StatementView text={statements[algorithm.id] ?? `# ${algorithm.title}\n\n${algorithm.description} ${algorithm.goal}\n\n## Đầu vào\n\n${algorithm.inputFormat}\n\n## Ví dụ\n\n${algorithm.example}`} /></div></details>
       <details className="input-detail"><summary>Dữ liệu đầu vào</summary><p>{algorithm.inputFormat}</p><pre>{JSON.stringify(customInput ?? algorithm.presets[safePreset].input, null, 2)}</pre></details>
       <details className="input-detail custom-input"><summary>Nhập dữ liệu tùy chỉnh (giống đề bài)</summary>
         <textarea aria-label="Nhập dữ liệu" placeholder={`Ví dụ đầu vào của bài này:\n${algorithm.example}`} value={customRaw} onChange={e => setCustomRaw(e.target.value)} rows={8}/>

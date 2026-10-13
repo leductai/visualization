@@ -48,6 +48,21 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .input-detail summary { cursor: pointer; width: fit-content; }
 .input-detail p { margin: 8px 0; }
 .input-detail pre { padding: 12px; max-height: 170px; overflow: auto; border: 1px solid var(--border); background: #fff; }
+.statement { padding: 12px 14px; max-height: 300px; overflow: auto; border: 1px solid var(--border, #e1e5e8); border-radius: 5px; background: var(--surface, #fff); font-size: 12.5px; line-height: 1.7; }
+.statement > :first-child { margin-top: 0; }
+.statement > :last-child { margin-bottom: 0; }
+.statement p { margin: 6px 0; }
+.st-h1 { font-size: 15px; margin: 4px 0 8px; }
+.st-h2 { font-size: 12px; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .02em; color: var(--muted, #64727b); }
+.st-label { font-weight: 700; margin: 10px 0 2px; color: var(--accent, #06745f); }
+.statement ul, .statement ol { margin: 4px 0 8px; padding-left: 20px; }
+.statement li { margin: 2px 0; }
+.st-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+.st-table th, .st-table td { border: 1px solid var(--border, #e1e5e8); padding: 4px 8px; text-align: left; vertical-align: top; }
+.st-table thead th { background: var(--surface-2, #f4f7f8); }
+.st-data { font-family: Consolas, monospace; font-size: 12px; margin: 4px 0 8px; }
+.st-displaymath { text-align: center; font-size: 15px; margin: 8px 0; }
+.st-math { font-family: Georgia, 'Times New Roman', serif; font-style: italic; }
 .algorithm-note { font-size: 11px; line-height: 1.65; padding: 10px 12px; border-left: 3px solid #d3a343; background: #fcf8ee; color: #736441; margin: 0 0 16px; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 20px; }
 .stage-panel, .code-panel { min-width: 0; border: 1px solid var(--border); border-radius: 6px; background: #fff; overflow: hidden; display: flex; flex-direction: column; height: 424px; }

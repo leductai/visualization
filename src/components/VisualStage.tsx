@@ -252,13 +252,25 @@ function GraphView({ state }: { state: VisualState }) {
   const cur = state.active?.[0];
   const curEnds = cur !== undefined && g.edges[cur] ? [g.edges[cur].u, g.edges[cur].v] : [];
   const inTree = new Set(state.marked ?? []);
-  return <svg className="graph-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Đồ thị vô hướng có trọng số">
+  const directed = Boolean(g.directed);
+  return <svg className="graph-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={directed ? 'Đồ thị có hướng' : 'Đồ thị vô hướng có trọng số'}>
+    <defs>
+      <marker id="g-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="#9fb0ba"/></marker>
+      <marker id="g-arrow-hi" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="#139d84"/></marker>
+    </defs>
     {g.edges.map((e, k) => {
       const [x1, y1] = at(e.u), [x2, y2] = at(e.v);
-      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
       const cls = e.status === 'chosen' ? 'chosen' : e.status === 'current' ? 'current' : e.status === 'skipped' ? 'skipped' : (state.path?.includes(k) ? 'chosen' : 'idle');
+      const hi = cls === 'chosen' || cls === 'current';
+      // Đồ thị có hướng: chừa đầu mũi tên khỏi hình tròn đỉnh (r = 17).
+      let lx1 = x1, ly1 = y1, lx2 = x2, ly2 = y2;
+      if (directed) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+        lx1 = x1 + dx / len * 19; ly1 = y1 + dy / len * 19; lx2 = x2 - dx / len * 22; ly2 = y2 - dy / len * 22;
+      }
+      const mx = (lx1 + lx2) / 2, my = (ly1 + ly2) / 2;
       return <g key={k} className={`g-edge ${cls} ${cur === k ? 'active' : ''}`}>
-        <line x1={x1} y1={y1} x2={x2} y2={y2}/>
+        <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} markerEnd={directed ? (hi ? 'url(#g-arrow-hi)' : 'url(#g-arrow)') : undefined}/>
         <text x={mx} y={my - 7} className="g-weight">{e.w}</text>
       </g>;
     })}
@@ -334,10 +346,10 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
       <button className="zoom-btn" onClick={toggleFs} aria-label={fs ? vi.exitFullscreen : vi.fullscreen} title={fs ? vi.exitFullscreen : vi.fullscreen}>{fs ? <Shrink size={14}/> : <Expand size={14}/>}</button>
     </div>
     <div className="zoom-body" ref={bodyRef} style={{ zoom }}>
-      {state.decision ? <><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/><DecisionTree nodes={state.decision} /></>
+      {state.decision && !state.graph ? <><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/><DecisionTree nodes={state.decision} /></>
         : state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String), active: state.active, marked: state.marked, path: state.path }} action={action}/></div>}</>
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
-        : state.graph ? <GraphView state={state}/>
+        : state.graph ? <><GraphView state={state}/>{state.decision && <DecisionTree nodes={state.decision}/>}</>
         : state.lp ? <LPView state={state} action={action} motion={motion}/>
         : algorithm.id === 'vach-thuoc' ? <RulerView state={state}/> : state.grid ? <Grid state={state} sudoku={algorithm.id === 'sudoku'} heatmap={algorithm.id === 'duong_di_an_toan' || algorithm.id === 'day-con-chung-dai-nhat'} action={action}/>
         : algorithm.category === 'Quy hoạch động' || algorithm.category === 'Cấu trúc dữ liệu'

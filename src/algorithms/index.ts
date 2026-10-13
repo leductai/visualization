@@ -18,6 +18,8 @@ import { vachThuoc } from './vach-thuoc';
 import { quyHoachTuyenTinh } from './quy-hoach-tuyen-tinh';
 import { cayKhungNhoNhat } from './cay-khung-nho-nhat';
 import { dayConChungDaiNhat } from './day-con-chung-dai-nhat';
+import { timDuongDi } from './tim-duong-di';
+import { lietKeNhiPhan } from './liet-ke-nhi-phan';
 
 export const algorithms = [
   sinhHoanVi,
@@ -40,6 +42,8 @@ export const algorithms = [
   quyHoachTuyenTinh,
   cayKhungNhoNhat,
   dayConChungDaiNhat,
+  timDuongDi,
+  lietKeNhiPhan,
 ];
 
 export const findAlgorithm = (id: string) => algorithms.find(a => a.id === id) ?? algorithms[0];

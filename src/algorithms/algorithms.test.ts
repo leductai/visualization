@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 20 original modules', () => {
-    expect(algorithms).toHaveLength(20);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(20);
+  it('contains all 22 modules', () => {
+    expect(algorithms).toHaveLength(22);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(22);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -105,6 +105,24 @@ describe('backtracking semantics', () => {
     for (let i = 0; i < 9; i++) { expect(new Set(grid[i]).size).toBe(9); expect(new Set(grid.map(row => row[i])).size).toBe(9); }
     expect(run('sudoku', a.presets[2].input).state.result).toContain('không có nghiệm');
     const conflict = structuredClone(a.presets[1].input); conflict.grid[0][0] = conflict.grid[0][1]; expect(a.validate(conflict)).not.toBeNull();
+  });
+  it('enumerates all simple paths in directed graphs', () => {
+    const a = findAlgorithm('tim-duong-di');
+    expect(run('tim-duong-di', a.presets[0].input).outputs).toEqual([
+      'U -> W -> M -> Q -> I', 'U -> W -> Q -> I', 'U -> Q -> I',
+    ]);
+    expect(run('tim-duong-di', a.presets[1].input).outputs).toEqual(['A -> B -> D', 'A -> C -> D']);
+    expect(run('tim-duong-di', a.presets[2].input).outputs).toEqual([]);
+    expect(run('tim-duong-di', a.presets[0].input).state.result).toContain('3 đường');
+    expect(a.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 0 }], start: 'A', end: 'B' })).not.toBeNull();
+    expect(a.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 1 }, { u: 0, v: 1 }], start: 'A', end: 'B' })).not.toBeNull();
+  });
+  it('enumerates binary strings in 0-then-1 DFS order', () => {
+    expect(run('liet-ke-nhi-phan', { n: 3 }).outputs).toEqual([
+      '000', '001', '010', '011', '100', '101', '110', '111',
+    ]);
+    expect(run('liet-ke-nhi-phan', { n: 0 }).outputs).toEqual(['']);
+    expect(run('liet-ke-nhi-phan', { n: 1 }).outputs).toEqual(['0', '1']);
   });
 });
 
@@ -214,6 +232,8 @@ describe('custom input parsers', () => {
     'quy-hoach-tuyen-tinh': 'max 3x + 2y\n2x + y <= 10\nx + 2y <= 8\nx >= 0\ny >= 0',
     'cay-khung-nho-nhat': '9 10\n1 2 6\n2 3 9\n1 4 14\n2 7 5\n2 5 12\n4 6 3\n4 7 8\n5 8 7\n7 8 10\n8 9 15',
     'day-con-chung-dai-nhat': 'abcbadt\ncbkadt',
+    'tim-duong-di': '6 13\nW K I U M Q\nW M\nW Q\nI W\nI K\nI U\nI M\nU W\nU K\nU Q\nM U\nM Q\nQ I\nQ M\nU I',
+    'liet-ke-nhi-phan': '3',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {
