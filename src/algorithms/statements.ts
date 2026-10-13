@@ -19,6 +19,9 @@ import lietKeNhiPhan from '../../webcode/liet-ke-nhi-phan.txt?raw';
 import sapXepTron from '../../webcode2/merge_sort.md?raw';
 import sapXepNhanh from '../../webcode2/quick_sort.md?raw';
 import sapHang2d from '../../webcode2/sap_hang_2d.md?raw';
+import giaiThua from '../../webcode/giai-thua.txt?raw';
+import hoanViChen from '../../webcode/hoan-vi-chen.txt?raw';
+import duongNganNhat from '../../webcode2/duong_ngan_nhat.md?raw';
 
 /** Đề bài gốc theo id thuật toán. 4 bài (vach-thuoc, quy-hoach-tuyen-tinh,
  *  cay-khung-nho-nhat, day-con-chung-dai-nhat) chưa có file đề nên App dùng
@@ -45,4 +48,7 @@ export const statements: Record<string, string> = {
   'sap-xep-tron': sapXepTron,
   'sap-xep-nhanh': sapXepNhanh,
   'sap-hang-2d': sapHang2d,
+  'giai-thua': giaiThua,
+  'hoan-vi-chen': hoanViChen,
+  'duong-ngan-nhat': duongNganNhat,
 };

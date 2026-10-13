@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 25 modules', () => {
-    expect(algorithms).toHaveLength(25);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(25);
+  it('contains all 28 modules', () => {
+    expect(algorithms).toHaveLength(28);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(28);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -150,6 +150,31 @@ describe('backtracking semantics', () => {
       expect(run('sap-hang-2d', { points }).outputs).toEqual(expected);
     }
   });
+  it('computes factorial top-down with a call stack', () => {
+    expect(run('giai-thua', { n: 5 }).outputs).toEqual(['120']);
+    expect(run('giai-thua', { n: 0 }).outputs).toEqual(['1']);
+    expect(run('giai-thua', { n: 10 }).outputs).toEqual(['3628800']);
+    expect(run('giai-thua', { n: 3 }).state.result).toContain('6');
+  });
+  it('builds permutations bottom-up by insertion', () => {
+    const ins = run('hoan-vi-chen', { items: [4, 3, 1, 2] });
+    expect(ins.outputs).toHaveLength(24);
+    expect(new Set(ins.outputs).size).toBe(24);
+    expect(ins.outputs.slice(0, 4)).toEqual(['2 1 3 4', '1 2 3 4', '1 3 2 4', '1 3 4 2']);
+    expect(run('hoan-vi-chen', { items: [3, 1, 2] }).outputs).toEqual([
+      '2 1 3', '1 2 3', '1 3 2', '2 3 1', '3 2 1', '3 1 2',
+    ]);
+    expect(run('hoan-vi-chen', { items: [7] }).outputs).toEqual(['7']);
+  });
+  it('runs Dijkstra with non-negative weights', () => {
+    const d = findAlgorithm('duong-ngan-nhat');
+    expect(run('duong-ngan-nhat', d.presets[0].input).outputs).toEqual([
+      'A -> C -> B -> D -> E -> F', '0 3 2 8 10 13',
+    ]);
+    expect(run('duong-ngan-nhat', d.presets[1].input).outputs).toEqual(['0 1 -1']);
+    expect(run('duong-ngan-nhat', d.presets[2].input).outputs).toEqual(['A', '0']);
+    expect(d.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 1, w: -1 }], start: 'A', end: 'B' })).not.toBeNull();
+  });
   it('enumerates binary strings in 0-then-1 DFS order', () => {
     expect(run('liet-ke-nhi-phan', { n: 3 }).outputs).toEqual([
       '000', '001', '010', '011', '100', '101', '110', '111',
@@ -270,6 +295,9 @@ describe('custom input parsers', () => {
     'sap-xep-tron': '8\n8 3 4 5 9 1 12 7',
     'sap-xep-nhanh': '8\n8 3 4 5 9 1 12 7',
     'sap-hang-2d': '5\nA 1 1\nB 2 3\nC 3 2\nD 4 4\nE 5 0',
+    'giai-thua': '5',
+    'hoan-vi-chen': '4 3 1 2',
+    'duong-ngan-nhat': '6 10\nA B C D E F\nA B 4\nA C 2\nB C 1\nC B 1\nB D 5\nC D 8\nC E 10\nD E 2\nD F 6\nE F 3\nA F',
   };
   it('every module parses the documented stdin format', () => {
     for (const a of algorithms) {

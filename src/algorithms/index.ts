@@ -23,6 +23,9 @@ import { lietKeNhiPhan } from './liet-ke-nhi-phan';
 import { sapXepTron } from './sap-xep-tron';
 import { sapXepNhanh } from './sap-xep-nhanh';
 import { sapHang2d } from './sap-hang-2d';
+import { giaiThua } from './giai-thua';
+import { hoanViChen } from './hoan-vi-chen';
+import { duongNganNhat } from './duong-ngan-nhat';
 
 export const algorithms = [
   sinhHoanVi,
@@ -50,6 +53,9 @@ export const algorithms = [
   sapXepTron,
   sapXepNhanh,
   sapHang2d,
+  giaiThua,
+  hoanViChen,
+  duongNganNhat,
 ];
 
 export const findAlgorithm = (id: string) => algorithms.find(a => a.id === id) ?? algorithms[0];

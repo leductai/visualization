@@ -1,0 +1,20 @@
+GIẢM ĐỂ TRỊ TOP-DOWN: TÍNH n!
+
+Thiết kế mã giả của giảm để trị, tính n! theo tư tưởng đệ quy:
+n! = (n-1)! * n (truy hồi: (n-1)! --> KQ * n).
+
+giaithua(n)
+{
+    if (n == 0) return 1;
+    return n * giaithua(n - 1);
+}
+
+Input: một số nguyên n (0 ≤ n ≤ 20).
+
+Output: một dòng duy nhất là n!
+
+Ví dụ:
+
+Input	Output
+5	120
+0	1

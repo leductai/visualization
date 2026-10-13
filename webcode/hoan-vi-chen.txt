@@ -1,0 +1,16 @@
+CÁCH 2 BOTTOM-UP: LIỆT KÊ HOÁN VỊ BẰNG CÁCH CHÈN
+
+LG: tập các hoán vị của dãy con. Khởi đầu LG = {(a0)}.
+hoanvi(a, n): lần lượt xét từng phần tử của a, chèn nó vào dãy đã có trước đó.
+for(i = 1 --> n-1):
+  // xử lý chèn a[i] vào đâu đó của LG của dãy con trước đó
+  // lần lượt xét từng thành phần trong LG, gọi tên thành phần đang xét là x,
+  // P = {} :
+  for(x in LG):
+    P = P U insert(x, a[i]); // chèn a[i] vào tất cả những vị trí có thể có trong x
+  LG = P
+
+VD: Liệt kê tất cả hoán vị của a = (4, 3, 1, 2).
+Output: tập hợp tất cả hoán vị (đủ 24 dòng, dãy dài dần từ 1 lên 4 trong quá trình chèn).
+
+Input: dãy các số nguyên phân biệt, cách nhau bởi khoảng trắng.

@@ -325,7 +325,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
   algorithm: Algorithm; state: VisualState; mode: '2d' | '3d'; motion: boolean; step: number; action?: SimulationEvent['action']; runKey: string; onFallback: () => void;
   playback: ScenePlayback; total: number; onSeek: (index: number) => void;
 }) {
-  const isRecursive = algorithm.category === 'Quay lui' || algorithm.category === 'Chia để trị';
+  const isRecursive = algorithm.category === 'Quay lui' || algorithm.category === 'Chia để trị' || algorithm.category === 'Giảm để trị';
   const depth = Number(state.variables?.viTri ?? state.variables?.soPhan ?? state.variables?.doSau ?? 0);
   // Thu/phóng sơ đồ 2D: co theo layout nên thanh cuộn cập nhật theo.
   const [zoom, setZoom] = useState(1);
@@ -366,7 +366,9 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
   }, []);
   const caption = algorithm.category === 'Quay lui' ? (algorithm.kind === 'graph' ? 'QUAY LUI · ĐỒ THỊ' : `QUAY LUI · ${algorithm.kind === 'grid' ? 'BẢNG ĐIỀU KHIỂN' : 'MẢNG LỰA CHỌN'}`)
     : algorithm.category === 'Chia để trị' ? `CHIA ĐỂ TRỊ · ĐỆ QUY`
-    : algorithm.category === 'Tối ưu' ? `TỐI ƯU · ĐỒ THỊ X–Y`
+    : algorithm.category === 'Giảm để trị' ? `GIẢM ĐỂ TRỊ · ĐỆ QUY`
+    : algorithm.category === 'Sinh' ? `SINH · LIỆT KÊ`
+    : algorithm.category === 'Tối ưu' ? (algorithm.kind === 'graph' ? 'TỐI ƯU · ĐỒ THỊ' : `TỐI ƯU · ĐỒ THỊ X–Y`)
     : algorithm.category === 'Quy hoạch động' ? `QUY HOẠCH ĐỘNG · BẢNG DP`
     : algorithm.kind === 'tree' ? 'CÂY GỐC 1' : algorithm.kind === 'timeline' ? 'DỰ ÁN / THỜI GIAN' : algorithm.kind === 'grid' ? 'BẢNG TRẠNG THÁI' : algorithm.kind === 'string' ? 'PHÂN ĐOẠN' : 'CẤU TRÚC DỮ LIỆU';
   return <div ref={stageRef} className={`visual-stage visual-${algorithm.kind} ${mode === '3d' ? 'immersive-stage' : ''}`} data-testid="visual-stage" data-action={action}>
@@ -391,7 +393,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>
           : <ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/>}
     </div></div>}
-    {state.secondary && (mode === '2d' || Boolean(state.grid) || Boolean(state.edges)) && <div className="secondary-visual"><span className="data-label">{state.secondaryLabel ?? 'Bảng phụ'}</span><ArrayRow values={state.secondary} state={state} labels={algorithm.id === 'truyvantong' || algorithm.id === 'rut_bai_trung_thuong' ? state.secondary.map((_, i) => String(i)) : undefined} compact action={action}/></div>}
+    {state.secondary && (mode === '2d' || Boolean(state.grid) || Boolean(state.edges)) && <div className="secondary-visual"><span className="data-label">{state.secondaryLabel ?? 'Bảng phụ'}</span><ArrayRow values={state.secondary} state={state} labels={algorithm.id === 'truyvantong' || algorithm.id === 'rut_bai_trung_thuong' ? state.secondary.map((_, i) => String(i)) : algorithm.id === 'duong-ngan-nhat' ? state.labels : undefined} compact action={action}/></div>}
     {mode === '3d' && state.secondary && !state.grid && !state.edges && <div className="secondary-visual secondary-3d"><span className="scene-data-label">{state.secondaryLabel}</span><ArrayRow values={state.secondary} state={state} compact action={action}/></div>}
     {mode === '3d' && state.edges && state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String), active: state.active, marked: state.marked, path: state.path }} action={action}/></div>}
     {isRecursive && !state.grid && <div className="recursion-path"><span className="data-label">Độ sâu</span>{Array.from({ length: Math.min(depth + 1, 21) }, (_, i) => <span className={i === depth ? 'current' : ''} key={i}>{i}</span>)}</div>}

@@ -12,6 +12,8 @@ function text(value: Cell, sudoku: boolean) {
 const categoryPalette = {
   'Quay lui': { accent: '#3f9d73', base: '#e8f4ee', edge: '#9cc4b2' },
   'Chia để trị': { accent: '#7c5cbf', base: '#ece7f8', edge: '#b3a3d9' },
+  'Giảm để trị': { accent: '#0f766e', base: '#e6f4f1', edge: '#9ccfc6' },
+  'Sinh': { accent: '#b45309', base: '#fdf3e7', edge: '#e3c193' },
   'Quy hoạch động': { accent: '#3b7dbf', base: '#e4edf8', edge: '#99b8d6' },
   'Cấu trúc dữ liệu': { accent: '#c27824', base: '#fbf1e4', edge: '#dab582' },
   'Tối ưu': { accent: '#b0578f', base: '#f7e9f2', edge: '#d3a9c6' },
