@@ -4,7 +4,7 @@ INPUT
 
 Dòng đầu tiên chứa từ cần tìm
 
-Các dòng tiếp theo trong input có độ dài bằng nhau, mỗi dòng chứa một chuỗi gồm các chữ cái tiếng Anh , đây là các hàng trong ô chữ
+Các dòng tiếp theo trong input có độ dài bằng nhau, mỗi dòng chứa một chuỗi gồm các chữ cái tiếng Anh, đây là các hàng trong ô chữ
 
 Input kết thúc bằng một dòng chỉ chứa dấu .
 
@@ -49,31 +49,6 @@ Giải thích:
  
 
 Ở ví dụ đầu, chuỗi ABCCED có thể được tạo thành bằng cách nối ký tự ở các ô:
+A B C E S F C S A D E E
 
-A
-
-B
-
-C
-
-E
-
-S
-
-F
-
-C
-
-S
-
-A
-
-D
-
-E
-
-E
-
- 
-
-Ghi chú: Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm
+Ghi chú: Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV không chấm

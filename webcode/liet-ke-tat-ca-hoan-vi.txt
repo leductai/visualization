@@ -45,6 +45,6 @@ Input	Output
 
  
 
-- Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV ko chấm
+- Nếu dùng kỹ thuật khác, không phải Backtracking thì xem như cách giải không hợp lệ, GV không chấm
  
 

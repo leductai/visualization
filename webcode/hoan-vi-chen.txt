@@ -2,7 +2,7 @@ CÁCH 2 BOTTOM-UP: LIỆT KÊ HOÁN VỊ BẰNG CÁCH CHÈN
 
 LG: tập các hoán vị của dãy con. Khởi đầu LG = {(a0)}.
 hoanvi(a, n): lần lượt xét từng phần tử của a, chèn nó vào dãy đã có trước đó.
-for(i = 1 --> n-1):
+for (i = 1 → n-1):
   // xử lý chèn a[i] vào đâu đó của LG của dãy con trước đó
   // lần lượt xét từng thành phần trong LG, gọi tên thành phần đang xét là x,
   // P = {} :

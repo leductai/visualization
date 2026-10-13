@@ -6,7 +6,7 @@ Chuỗi s không chứa khoảng trắng, không quá 100 ký tự.
 
 OUTPUT
 
-Với mỗi cách chia chuỗi s thành những chuỗi con, xuất ra các chuỗi con này trên cùng một dòng cách nhau bởi khoảng trắng. Các chuỗi con phải được xuất theo đúng thứ tự chúng xuất hiện trong chuỗi s. Thứ tự xuất các cách chia là không quan trọng, hệ thống chấm được hết)
+Với mỗi cách chia chuỗi s thành những chuỗi con, xuất ra các chuỗi con này trên cùng một dòng cách nhau bởi khoảng trắng. Các chuỗi con phải được xuất theo đúng thứ tự chúng xuất hiện trong chuỗi s. Thứ tự xuất các cách chia là không quan trọng (hệ thống chấm được hết).
 
 VÍ DỤ
 

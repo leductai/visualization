@@ -7,7 +7,7 @@ Output: { 000, 001, ... 111 }
 1. Vét cạn: thử mọi khả năng cho từng vị trí, không bỏ sót trường hợp nào.
 
 2. Cấu trúc lời giải (LG): 1 LG = 1 dãy nhị phân có độ dài n.
-   Output: tập hợp các LG (đủ 2^n dãy).
+   Output: tập hợp các LG (đủ $2^n$ dãy).
 
 3. Quay lui: ở mỗi vị trí thử bit 0 rồi bit 1, đi sâu tới khi đủ n vị trí
    thì in dãy; vì mỗi bit đều hợp lệ nên không có nhánh nào bị cắt tỉa.

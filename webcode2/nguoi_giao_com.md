@@ -1,6 +1,6 @@
 # Người giao cơm
 
-Lưu Ngô là một cậu sinh viên nhận giao cơm cho quán ăn nọ, công việc của cậu là mỗi ngày giao cơm đến \(n\) căn hộ khác nhau (mỗi căn hộ đánh số từ \(1 \dots n\)), đảm bảo rằng các căn hộ liên thông với nhau (luôn có đường đi từ căn hộ này đến \(n - 1\) căn hộ khác). Lo sợ sẽ hết xăng trên đường nên Lưu Ngô cần biết \(q\) khoảng cách từ căn hộ này đến căn hộ kia để đi cho phù hợp với lượng xăng còn lại trong bình. Thật tiếc vì cậu ấy không thể ước lượng được tất cả khoảng cách này, giúp cậu ta nhé:
+Lưu Ngô là một cậu sinh viên nhận giao cơm cho quán ăn nọ, công việc của cậu là mỗi ngày giao cơm đến \(n\) căn hộ khác nhau (mỗi căn hộ đánh số từ \(1 \dots n\)), đảm bảo rằng các căn hộ liên thông với nhau (luôn có đường đi từ căn hộ này đến mọi căn hộ khác). Lo sợ sẽ hết xăng trên đường nên Lưu Ngô cần biết \(q\) khoảng cách từ căn hộ này đến căn hộ kia để đi cho phù hợp với lượng xăng còn lại trong bình. Thật tiếc vì cậu ấy không thể ước lượng được tất cả khoảng cách này, giúp cậu ta nhé:
 
 ## Input
 

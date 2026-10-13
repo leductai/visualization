@@ -4,7 +4,7 @@ Sudoku là một trò chơi phổ biến rộng rãi dùng để giết thời g
 
 
 
-Một Sudoku kích thước 9 × 9 được chia làm 9 hình vuông cơ sở, thu được bằng cách cắt đường cắt mỗi chiều thành ba phần bằng nhau. Một Sudoku được xem là hợp lệ nếu mỗi khi ta xét một hàng, một cột, hoặc một hình vuông cơ sở, ta sẽ thu được một hoán vị của 9 số tự nhiên đầu tiên. Cho một Sudoku trong đó một vài ô còn trống chưa được điền. Hãy điền các số vào các ô trống đó sao cho tạo được một Sudoku hợp lệ.
+Một Sudoku kích thước 9 × 9 được chia làm 9 hình vuông cơ sở, thu được bằng cách cắt mỗi chiều thành ba phần bằng nhau. Một Sudoku được xem là hợp lệ nếu mỗi khi ta xét một hàng, một cột, hoặc một hình vuông cơ sở, ta sẽ thu được một hoán vị của 9 số tự nhiên đầu tiên. Cho một Sudoku trong đó một vài ô còn trống chưa được điền. Hãy điền các số vào các ô trống đó sao cho tạo được một Sudoku hợp lệ.
 
 Input
 Gồm một ma trận có kích thước 9×9, trong đó các ô được điền sẵn sẽ mang số tương ứng, các ô chưa được điền sẽ mang ký tự X. Input đảm bảo không có quá 5 ô trống chưa được điền.
@@ -14,7 +14,18 @@ Gồm một ma trận có kích thước 9 × 9, thể hiện một Sudoku hợp
 
  
 
-Ví dụ:
+Ví dụ (X là ô trống):
+```text
+53XX7XXXX
+6XX195XXX
+X98XXXX6X
+8XXX6XXX3
+4XX8X3XX1
+7XXX2XXX6
+X6XXXX28X
+XXX419XX5
+XXXX8XX79
+```
 
 
  

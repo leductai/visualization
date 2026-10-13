@@ -31,6 +31,20 @@ describe('statement formatting', () => {
     expect(blocks[1]).toEqual({ kind: 'data', lines: ['4', '2 4 4'] });
     expect(blocks[2]).toEqual({ kind: 'math', text: '4 + 3 = 7' });
   });
+  it('strips \\text{} and renders hr', () => {
+    expect(formatMathText('\\text{LOVE} \\to \\text{MOVE}')).toBe('LOVE → MOVE');
+    expect(formatMathText('1.0\\text{s}')).toBe('1.0s');
+    expect(parseStatement('a\n\n---\n\nb')).toEqual([
+      { kind: 'paragraph', text: 'a' },
+      { kind: 'hr' },
+      { kind: 'paragraph', text: 'b' },
+    ]);
+  });
+  it('renders `code` spans', () => {
+    const nodes = inlineNodes('bốc `LOVE` thành `MOVIE`', 'k');
+    const codes = nodes.filter((n: any) => n?.props?.className === 'st-code');
+    expect(codes.map((n: any) => n.props.children)).toEqual(['LOVE', 'MOVIE']);
+  });
   it('keeps example data rows on separate lines', () => {
     const blocks = parseStatement('Example:\n4 4\n2 0 1 1\n0 2 1 0');
     expect(blocks[0]).toEqual({ kind: 'label', text: 'Example' });

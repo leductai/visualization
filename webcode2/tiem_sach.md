@@ -7,7 +7,7 @@ Bạn đã quyết định rằng tổng giá mua của bạn tối đa là \(x\
 ## Input
 
 - Dòng đầu tiên gồm hai số nguyên \(n\) và \(x\) lần lượt là số lượng sách và số tiền tối đa mà bạn chi.
-- Dòng thứ hai gồm dãy \(n\) số nguyên \(h_1, h_2, \dots, h_n\) là giá trị của mỗi cuốn sách.
+- Dòng thứ hai gồm dãy \(n\) số nguyên \(h_1, h_2, \dots, h_n\) là giá tiền của mỗi cuốn sách.
 - Dòng thứ ba gồm dãy \(n\) số nguyên \(s_1, s_2, \dots, s_n\) là số lượng trang của mỗi cuốn sách.
 
 ## Output

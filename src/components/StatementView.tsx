@@ -15,6 +15,7 @@ const sub = (s: string) => [...s].map(c => SUB[c] ?? c).join('');
 /** Biến `$1 \\le n \\le 2 \\cdot 10^5$` thành text đọc được (không cần KaTeX). */
 export function formatMathText(s: string): string {
   return s
+    .replace(/\\text\{([^}]*)\}/g, '$1')
     .replace(/\\([a-zA-Z]+)/g, (_, c: string) => MATH_CMD[c] ?? c)
     .replace(/\\/g, '')
     .replace(/\^\{([^}]*)\}/g, (_, e: string) => sup(e))
@@ -30,7 +31,8 @@ export type StatementBlock =
   | { kind: 'list'; ordered: boolean; items: string[] }
   | { kind: 'table'; head: string[]; rows: string[][] }
   | { kind: 'data'; lines: string[] }
-  | { kind: 'math'; text: string };
+  | { kind: 'math'; text: string }
+  | { kind: 'hr' };
 
 const clean = (s: string) => s.replace(/[\u200b-\u200d\ufeff]/g, '').replace(/\s+/g, ' ').trim();
 const isDataRow = (t: string) => /[\d]/.test(t) && /^[\d\s+\-.]+$/.test(t);
@@ -103,6 +105,7 @@ export function parseStatement(raw: string): StatementBlock[] {
     }
     const mdHead = t.match(/^(#{1,4})\s+(.*)$/);
     if (mdHead) { flushPara(); blocks.push({ kind: 'heading', level: mdHead[1].length, text: clean(mdHead[2].replace(/:$/, '')) }); i++; continue; }
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(t.replace(/\s+/g, ''))) { flushPara(); blocks.push({ kind: 'hr' }); i++; continue; }
     if (isPipeRow(t)) { flushPara(); pushTable(takeTable(isPipeRow), '|'); continue; }
     if (t.includes('\t')) { flushPara(); pushTable(takeTable(x => x.includes('\t')), '\t'); continue; }
     const bullet = t.match(/^([-*+]\s+|\d+[.)]\s+)(.*)$/);
@@ -131,12 +134,15 @@ export function parseStatement(raw: string): StatementBlock[] {
 }
 
 export function inlineNodes(text: string, key: string): ReactNode[] {
-  return text.split(/(\$[^$\n]+\$|\\\(.+?\\\))/g).map((part, i) => {
+  return text.split(/(\$[^$\n]+\$|\\\(.+?\\\)|`[^`\n]+`)/g).map((part, i) => {
     if (part.length > 2 && part.startsWith('$') && part.endsWith('$')) {
       return <span key={`${key}-${i}`} className="st-math">{formatMathText(part.slice(1, -1))}</span>;
     }
     if (part.length > 4 && part.startsWith('\\(') && part.endsWith('\\)')) {
       return <span key={`${key}-${i}`} className="st-math">{formatMathText(part.slice(2, -2))}</span>;
+    }
+    if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
+      return <code key={`${key}-${i}`} className="st-code">{part.slice(1, -1)}</code>;
     }
     return part.split(/(\*\*[^*]+\*\*)/g).map((p, j) =>
       p.length > 4 && p.startsWith('**') && p.endsWith('**')
@@ -164,6 +170,7 @@ export function StatementView({ text }: { text: string }) {
       case 'table': return <table key={i} className="st-table"><thead><tr>{b.head.map((c, j) => <th key={j}>{cellLines(c, `th${i}-${j}`)}</th>)}</tr></thead><tbody>{b.rows.map((r, k) => <tr key={k}>{r.map((c, j) => <td key={j}>{cellLines(c, `td${i}-${k}-${j}`)}</td>)}</tr>)}</tbody></table>;
       case 'data': return <div key={i} className="st-data">{b.lines.map((l, j) => <div key={j}>{l}</div>)}</div>;
       case 'math': return <div key={i} className="st-displaymath"><span className="st-math">{formatMathText(b.text)}</span></div>;
+      case 'hr': return <hr key={i} className="st-hr" />;
     }
   })}</>;
 }
