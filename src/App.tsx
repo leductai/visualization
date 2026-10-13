@@ -102,6 +102,19 @@ export default function App() {
     };
     window.addEventListener('hashchange', onHash); return () => window.removeEventListener('hashchange', onHash);
   }, []);
+  // Phím cách: phát/tạm dừng, hoặc chạy lại khi đã xong. Bỏ qua khi đang gõ
+  // hoặc focus vào điều khiển tương tác (để giữ hành vi Space gốc của chúng).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.('input, textarea, select, button, summary, a, [role="tab"], [role="slider"]')) return;
+      e.preventDefault();
+      if (player.status === 'complete' || player.status === 'stopped') player.replay();
+      else player.toggle();
+    };
+    window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
+  }, [player]);
   // Trả focus về nút mở thư viện khi đóng drawer (a11y).
   const openNavRef = useRef<HTMLButtonElement>(null), wasNavOpen = useRef(false);
   useEffect(() => {
@@ -134,7 +147,7 @@ export default function App() {
       <OutputPanel count={player.outputCount} runKey={player.runKey} read={player.readOutputs} seek={player.seek}/>
       </div>
       <div className="timeline-controls"><button className="icon-button" disabled={!player.step} onClick={() => void player.seek(player.step - 1)} aria-label="Bước trước" title="Bước trước"><SkipBack size={17}/></button><input aria-label="Lịch sử thực thi" type="range" min={0} max={Math.max(1, player.total)} value={player.step} disabled={!player.total} onChange={e => void player.seek(Number(e.target.value))}/><span>{player.step} / {player.total}</span></div>
-      <footer className="controls"><div className="playback-buttons"><button className="icon-button" onClick={player.reset} title={vi.reset} aria-label={vi.reset}><RotateCcw size={18}/></button><button className="icon-button" onClick={player.stop} title={vi.stop} aria-label={vi.stop} disabled={player.status === 'stopped'}><CircleStop size={18}/></button><button className="step-button" disabled={!player.canNext || player.playing} onClick={() => void player.next()}><SkipForward size={17}/><span>{vi.next}</span></button><button className="play-button" disabled={!player.canNext} onClick={player.toggle}>{player.playing ? <Pause size={17}/> : <Play size={17}/>}<span>{player.playing ? vi.pause : vi.play}</span></button></div><label className="speed"><Gauge size={16}/><span>Tốc độ</span><input aria-label="Tốc độ" type="range" min="0.5" max="16" step="0.5" value={player.speed} onChange={e => player.setSpeed(Number(e.target.value))}/><b>{player.speed}×</b></label></footer>
+      <footer className="controls"><div className="playback-buttons"><button className="icon-button" onClick={player.reset} title={vi.reset} aria-label={vi.reset}><RotateCcw size={18}/></button><button className="icon-button" onClick={player.stop} title={vi.stop} aria-label={vi.stop} disabled={player.status === 'stopped'}><CircleStop size={18}/></button><button className="step-button" disabled={!player.canNext || player.playing} onClick={() => void player.next()}><SkipForward size={17}/><span>{vi.next}</span></button><button className="play-button" disabled={!player.canNext} onClick={player.toggle} title={`${player.playing ? vi.pause : vi.play} (Space)`} aria-keyshortcuts="Space">{player.playing ? <Pause size={17}/> : <Play size={17}/>}<span>{player.playing ? vi.pause : vi.play}</span></button></div><label className="speed"><Gauge size={16}/><span>Tốc độ</span><input aria-label="Tốc độ" type="range" min="0.5" max="16" step="0.5" value={player.speed} onChange={e => player.setSpeed(Number(e.target.value))}/><b>{player.speed}×</b></label></footer>
       {player.warning && <div className="warning" role="alert">{player.warning}</div>}
       {graphicsWarning && <div className="warning" role="alert">{graphicsWarning}</div>}
       <div className="page-footer"><span>{vi.brand}</span><span>Thời gian chạy: {(player.elapsed / 1000).toFixed(1)}s · {algorithm.complexity}</span></div>

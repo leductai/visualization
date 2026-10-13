@@ -198,6 +198,29 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
   }, [playing]);
 
   const canNext = ready && !isBusy && (step < total || (!finished.current && !cancelled.current));
+  // Replay sau khi dừng hẳn cần khởi tạo lại worker; cờ này tự chạy khi đã sẵn sàng.
+  const wantAutoPlay = useRef(false);
+  useEffect(() => {
+    if (wantAutoPlay.current && ready && canNext) {
+      wantAutoPlay.current = false;
+      setPlayingSync(true); setStatus('running'); playTick();
+    }
+  }, [ready, canNext, playTick, setPlayingSync]);
+  const replay = useCallback(() => {
+    if (busy.current) return;
+    if (!cancelled.current && finished.current) {
+      // Chạy xong: phát lại từ đầu trên lịch sử đã xem.
+      const token = generation.current;
+      void seek(0).then(() => {
+        if (token !== generation.current || cancelled.current) return;
+        setPlayingSync(true); setStatus('running'); playTick();
+      });
+    } else if (cancelled.current || finished.current) {
+      // Đã dừng (bộ đệm bị cắt): chạy mới hoàn toàn rồi tự phát.
+      wantAutoPlay.current = true;
+      setVersion(v => v + 1);
+    }
+  }, [seek, playTick, setPlayingSync]);
   const setDetailAndReset = useCallback((value: Detail) => {
     if (playingRef.current) return;
     setDetail(prev => {
@@ -209,11 +232,12 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
     });
   }, []);
   return { state, event, playing, status, step, total, outputCount, elapsed, speed, setSpeed, detail,
-    setDetail: setDetailAndReset, warning, ready, canNext, next, seek, isBusy,
+    setDetail: setDetailAndReset, warning, ready, canNext, next, seek, isBusy, replay,
+    completed: status === 'complete' || status === 'stopped',
     readOutputs: useCallback((offset: number, count: number) => history.current?.getOutputs(offset, count) ?? Promise.resolve([]), []),
     consoleHistory,
     runKey: `${algorithm.id}:${safePreset}:${version}:${detail}:${customInput ? `custom:${hashInput(customInput)}` : ''}`,
-    reset: () => setVersion(v => v + 1),
+    reset: () => { wantAutoPlay.current = false; setVersion(v => v + 1); },
     toggle: () => {
       if (!canNext) return;
       if (playing) { setPlayingSync(false); setStatus('paused'); }

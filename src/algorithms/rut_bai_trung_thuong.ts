@@ -30,8 +30,22 @@ function* editDistance({ a, b }: EditInput): Generator<SimulationEvent> {
       yield emit('update', `dp[${i}][${j}] = ${cur[j]} (${operation}).`, state, 4, fragment);
     }
   }
+  // Truy vết từ dp[n][m] về dp[0][0] theo đúng thứ tự ưu tiên của C++ (thay → xóa → chèn).
+  const path: number[] = [];
+  const ops = { giu: 0, thay: 0, xoa: 0, chen: 0 };
+  for (let i = a.length, j = b.length; i > 0 || j > 0;) {
+    path.push(i * (b.length + 1) + j);
+    const cur = matrix[i][j] as number;
+    if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) { ops.giu++; i--; j--; continue; }
+    if (i > 0 && j > 0 && (matrix[i - 1][j - 1] as number) + 1 === cur) { ops.thay++; i--; j--; }
+    else if (i > 0 && (matrix[i - 1][j] as number) + 1 === cur) { ops.xoa++; i--; }
+    else { ops.chen++; j--; }
+  }
+  path.push(0);
+  state.path = path;
+  state.variables = { i: a.length, j: b.length, giu: ops.giu, thay: ops.thay, xoa: ops.xoa, chen: ops.chen };
   state.result = String(rows[a.length & 1][b.length]); state.outputs = [state.result];
-  yield emit('output', `Khoảng cách chỉnh sửa: ${state.result}.`, state, 5, 'cout << soBuocSua');
+  yield emit('output', `Khoảng cách chỉnh sửa: ${state.result} (giữ ${ops.giu}, thay ${ops.thay}, xóa ${ops.xoa}, chèn ${ops.chen}).`, state, 5, 'cout << soBuocSua');
   yield emit('complete', `Kết quả: ${state.result}.`, state, 5, 'cout << soBuocSua');
 }
 

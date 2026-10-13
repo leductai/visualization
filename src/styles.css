@@ -213,6 +213,8 @@ h2 { font-size: 19px; line-height: 1.4; font-weight: 600; margin: 0 0 5px; }
 .interval-bar { background: #e4eef5; color: #436681; border: 1px solid #b8d1df; border-radius: 3px; padding: 3px 5px; white-space: nowrap; min-width: 58px; }
 .interval-row.active .interval-bar { background: #dff2e9; color: #16775f; border-color: #299e7f; }
 .interval-row.marked .interval-bar { background: #fff0e6; color: #885435; border-color: #dbb695; }
+.interval-row.path .interval-bar { background: #e8f2fa; color: #2a6387; border-color: #9cc5dc; }
+.pred-badge { font: 10px Consolas, monospace; color: #885435; background: #fff0e6; border: 1px solid #dbb695; border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
 .interval-row > b { width: 26px; font-weight: 500; color: #5f707b; }
 .stage-footer { flex-shrink: 0; min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border); gap: 12px; }
 .legend { display: flex; gap: 12px; font-size: 9px; color: #64727b; }

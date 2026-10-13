@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { CheckCheck, Expand, Maximize2, Pause, Play, Shrink, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { CheckCheck, Expand, Maximize2, Pause, Play, RotateCcw, Shrink, X, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Algorithm, Cell, DecisionNode, SimulationEvent, VisualState } from '../engine/types';
 import type { LPVertex } from '../engine/types';
 import { vi } from '../i18n/vi';
@@ -82,8 +82,10 @@ function Timeline({ state, action }: { state: VisualState; action?: SimulationEv
   const items = state.intervals ?? [];
   if (!items.length) return <span className="empty-value">∅</span>;
   const min = Math.min(...items.map(p => p.start)), max = Math.max(...items.map(p => p.end));
+  const pred = typeof state.variables?.truoc === 'number' ? state.variables.truoc as number : -1;
   return <div className="intervals">{items.map((p, i) => <div className={`interval-row ${cellClass(state, i, action)}`} key={i}>
     <span className="interval-index">{i + 1}</span><div className="interval-track"><div className="interval-bar" style={{ marginLeft: `${(p.start - min) / (max - min || 1) * 78}%`, width: `${Math.max(12, (p.end - p.start) / (max - min || 1) * 78)}%` }}>{p.start} → {p.end}</div></div><b>+{p.value}</b>
+    {state.active?.includes(i) && pred >= 0 && <span className="pred-badge" title={`Tiền nhiệm tương thích: dự án ${pred + 1}`}>← #{pred + 1}</span>}
   </div>)}</div>;
 }
 
@@ -349,7 +351,9 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
     {algorithm.id === 'tinh-diem-mon-hoc' && state.variables?.canDuoi !== undefined && <div className="bounds"><span>Cận khả thi</span><b>{state.variables.canDuoi} … {state.variables.canTren}</b><span>Mục tiêu</span><b>{state.variables.tongThapNhat} … {state.variables.tongCaoNhat}</b></div>}
     {state.result && <div className="result-banner" data-testid="result"><CheckCheck size={18}/><span>Kết quả</span><pre>{state.result}</pre></div>}
     {fs && <div className="fs-player" role="group" aria-label="Trình phát toàn màn hình">
-      <button className="fs-btn" onClick={playback.toggle} disabled={!playback.canNext} aria-label={playback.playing ? vi.pause : vi.play} title={playback.playing ? vi.pause : vi.play}>{playback.playing ? <Pause size={17}/> : <Play size={17}/>}</button>
+      {playback.completed
+        ? <button className="fs-btn" onClick={() => playback.replay()} aria-label={vi.replay} title={`${vi.replay} (Space)`}><RotateCcw size={17}/></button>
+        : <button className="fs-btn" onClick={playback.toggle} disabled={!playback.canNext} aria-label={playback.playing ? vi.pause : vi.play} title={playback.playing ? vi.pause : vi.play}>{playback.playing ? <Pause size={17}/> : <Play size={17}/>}</button>}
       <input className="fs-slider" aria-label={vi.seekVideo} type="range" min={0} max={Math.max(1, total)} value={step} disabled={!total} onChange={e => onSeek(Number(e.target.value))}/>
       <span className="fs-step">{step} / {total}</span>
       <button className="fs-btn" onClick={toggleFs} aria-label={vi.exitFullscreen} title={vi.exitFullscreen}><X size={17}/></button>

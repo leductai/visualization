@@ -1,6 +1,6 @@
 export const vi = {
   brand: 'algo.studio', tagline: 'THUẬT TOÁN, TỪNG BƯỚC MỘT', library: 'Thư viện thuật toán',
-  play: 'Chạy', pause: 'Tạm dừng', next: 'Bước tiếp', stop: 'Dừng', reset: 'Làm lại',
+  play: 'Chạy', pause: 'Tạm dừng', next: 'Bước tiếp', stop: 'Dừng', reset: 'Làm lại', replay: 'Chạy lại',
   easy: 'Dễ hiểu', detailed: 'Chi tiết', ready: 'Sẵn sàng khám phá', running: 'Đang thực thi',
   paused: 'Đã tạm dừng', complete: 'Đã hoàn thành', stopped: 'Đã dừng',
   stage: 'Không gian trực quan', code: 'Mã thuật toán', console: 'Nhật ký thực thi',

@@ -7,9 +7,10 @@ type Interval = { start: number; end: number; value: number };
 
 function* intervals({ projects }: { projects: Interval[] }): Generator<SimulationEvent> {
   const emit = emitter(source), sorted = [...projects].sort((a, b) => a.end - b.end), dp = Array(sorted.length).fill(0);
+  const chain: number[][] = sorted.map(() => []);
   const state: VisualState = { intervals: sorted, values: dp, secondaryLabel: 'tongTinChi', variables: {} };
   yield emit('update', 'Sắp xếp dự án theo thời điểm kết thúc.', state, 1, 'sort(dsDuAn');
-  dp[0] = sorted[0].value; state.active = [0];
+  dp[0] = sorted[0].value; chain[0] = sorted[0].value > 0 ? [0] : []; state.active = [0]; state.path = [...chain[0]];
   yield emit('update', `tongTinChi[0] = ${dp[0]}.`, state, 2, 'tongTinChi[0] =');
   for (let i = 1; i < sorted.length; i++) {
     let left = 0, right = i - 1, pred = -1;
@@ -19,6 +20,8 @@ function* intervals({ projects }: { projects: Interval[] }): Generator<Simulatio
       if (sorted[mid].end < sorted[i].start) { pred = mid; left = mid + 1; } else right = mid - 1;
     }
     const take = sorted[i].value + (pred >= 0 ? dp[pred] : 0); dp[i] = Math.max(take, dp[i - 1]); state.marked = pred >= 0 ? [pred] : [];
+    chain[i] = take > dp[i - 1] ? [i, ...(pred >= 0 ? chain[pred] : [])] : [...chain[i - 1]];
+    state.path = [...chain[i]];
     state.variables = { i, truoc: pred, chon: take, bo: dp[i - 1], totNhat: dp[i] };
     yield emit('update', `dp[${i}] = max(${take}, ${dp[i - 1]}) = ${dp[i]}.`, state, 4, 'if (tongTinChi[i-1] >');
   }

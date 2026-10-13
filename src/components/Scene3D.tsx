@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Expand, Focus, Minus, Pause, Play, Plus, Rotate3d, Shrink, SkipForward } from 'lucide-react';
+import { Expand, Focus, Minus, Pause, Play, Plus, Rotate3d, RotateCcw, Shrink, SkipForward } from 'lucide-react';
 import type { Algorithm, SimulationEvent, VisualState } from '../engine/types';
 import { buildSceneModel } from './scene/model';
 import { createScene } from './scene/renderer';
 import { vi } from '../i18n/vi';
 
-export interface ScenePlayback { canNext: boolean; playing: boolean; next: () => Promise<void>; toggle: () => void; }
+export interface ScenePlayback { canNext: boolean; playing: boolean; completed: boolean; next: () => Promise<void>; toggle: () => void; replay: () => void; }
 
 export default function Scene3D({ algorithm, state, action, step, runKey, motion, onFallback, playback, onFullscreen, isFs }: {
   algorithm: Algorithm; state: VisualState; action?: SimulationEvent['action']; step: number; runKey: string; motion: boolean; onFallback: () => void;
@@ -44,7 +44,9 @@ export default function Scene3D({ algorithm, state, action, step, runKey, motion
     <div className={`scene-step scene-step-${action ?? 'ready'}`} key={step}><span/>{action ? vi.actions[action] : vi.sceneReady}<small>{vi.step} {step}</small></div>
     <div className="scene-playback" role="group" aria-label={vi.scenePlayback}>
       <button className="icon-button" aria-label={vi.sceneNext} title={vi.sceneNext} disabled={!playback.canNext || playback.playing} onClick={() => void playback.next()}><SkipForward size={16}/></button>
-      <button className="icon-button scene-play" aria-label={playback.playing ? vi.scenePause : vi.scenePlay} title={playback.playing ? vi.scenePause : vi.scenePlay} disabled={!playback.canNext} onClick={playback.toggle}>{playback.playing ? <Pause size={16}/> : <Play size={16}/>}</button>
+      {playback.completed
+        ? <button className="icon-button scene-play" aria-label={vi.replay} title={`${vi.replay} (Space)`} onClick={() => playback.replay()}><RotateCcw size={16}/></button>
+        : <button className="icon-button scene-play" aria-label={playback.playing ? vi.scenePause : vi.scenePlay} title={playback.playing ? vi.scenePause : vi.scenePlay} disabled={!playback.canNext} onClick={playback.toggle}>{playback.playing ? <Pause size={16}/> : <Play size={16}/>}</button>}
     </div>
     <ol className="sr-only" aria-label={vi.sceneData}>{srNodes.map(node => <li key={node.key}>{node.caption}</li>)}</ol>
   </div>;
