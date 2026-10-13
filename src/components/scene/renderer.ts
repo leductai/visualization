@@ -23,7 +23,9 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75)); renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-  renderer.setClearColor('#f0f5f7');
+  const darkScene = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark';
+  const clearColor = darkScene ? '#10171b' : '#f0f5f7';
+  renderer.setClearColor(clearColor);
   const canvas = renderer.domElement; canvas.className = 'algorithm-canvas'; canvas.tabIndex = 0;
   canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', 'Mô hình 3D thuật toán');
   host.appendChild(canvas);
@@ -39,9 +41,9 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
   light.shadow.camera.top = 15; light.shadow.camera.bottom = -15; light.shadow.normalBias = .035;
   light.shadow.bias = -.0002; light.shadow.blurSamples = 6; scene.add(light);
   const fill = new THREE.DirectionalLight('#cce8f5', .7); fill.position.set(8, 3, -5); scene.add(fill);
-  const floorGeometry = new THREE.PlaneGeometry(200, 200), floorMaterial = new THREE.MeshStandardMaterial({ color: '#f0f5f7', roughness: .96 });
+  const floorGeometry = new THREE.PlaneGeometry(200, 200), floorMaterial = new THREE.MeshStandardMaterial({ color: clearColor, roughness: .96 });
   const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.rotation.x = -Math.PI / 2; floor.position.y = -.035; floor.receiveShadow = true; scene.add(floor);
-  const grid = new THREE.GridHelper(60, 60, '#cadce5', '#dce7ed'); grid.position.y = -.025;
+  const grid = new THREE.GridHelper(60, 60, darkScene ? '#2c3d46' : '#cadce5', darkScene ? '#1d2a31' : '#dce7ed'); grid.position.y = -.025;
   (grid.material as THREE.Material).transparent = true; (grid.material as THREE.Material).opacity = .5; scene.add(grid);
   const geometry = new RoundedBoxGeometry(1, 1, 1, 3, .075), faceGeometry = new THREE.PlaneGeometry(1, 1);
   const linkGeometry = new THREE.CylinderGeometry(.025, .025, 1, 8);

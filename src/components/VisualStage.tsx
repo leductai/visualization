@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { CheckCheck, Expand, Maximize2, Pause, Play, Shrink, X, ZoomIn, ZoomOut } from 'lucide-react';
-import type { Algorithm, Cell, SimulationEvent, VisualState } from '../engine/types';
+import type { Algorithm, Cell, DecisionNode, SimulationEvent, VisualState } from '../engine/types';
 import type { LPVertex } from '../engine/types';
 import { vi } from '../i18n/vi';
 import type { ScenePlayback } from './Scene3D';
@@ -49,8 +49,9 @@ function Tree({ state, action }: { state: VisualState; action?: SimulationEvent[
   const levels = Array.from({ length: Math.max(...depths.values()) + 1 }, (_, depth) => queue.filter(v => depths.get(v) === depth));
   const positions = new Map<number, [number, number]>();
   levels.forEach((level, d) => level.forEach((node, i) => positions.set(node, [(i + 1) * 540 / (level.length + 1), 28 + d * 72])));
+  const posOf = (node: number): [number, number] => positions.get(node) ?? [270, 28];
   return <svg className="tree-svg" viewBox={`0 0 540 ${Math.max(105, levels.length * 72)}`} role="img" aria-label="Cây và đường đi truy vấn">
-    {edges.map(([a, b]) => { const pa = positions.get(a)!, pb = positions.get(b)!; const onPath = state.path?.includes(a - 1) && state.path?.includes(b - 1);
+    {edges.map(([a, b]) => { const pa = posOf(a), pb = posOf(b); const onPath = state.path?.includes(a - 1) && state.path?.includes(b - 1);
       return <line key={`${a}-${b}`} x1={pa[0]} y1={pa[1]} x2={pb[0]} y2={pb[1]} className={onPath ? 'tree-path' : ''}/>;
     })}
     {nodes.map(value => { const node = Number(value), [x, y] = positions.get(node) ?? [0, 0];
@@ -60,12 +61,17 @@ function Tree({ state, action }: { state: VisualState; action?: SimulationEvent[
 }
 
 function Grid({ state, sudoku = false, heatmap = false, action }: { state: VisualState; sudoku?: boolean; heatmap?: boolean; action?: SimulationEvent['action'] }) {
-  const columns = state.grid?.[0]?.length ?? 1;
-  return <div className={`matrix ${sudoku ? 'sudoku-board' : ''}`} style={{ '--columns': columns } as CSSProperties}>
+  const rows = state.grid ?? [];
+  const columns = Math.max(1, ...rows.map(r => r.length));
+  // Chỉ số ô phẳng theo offset từng hàng để đúng cả khi grid răng cưa.
+  const offsets: number[] = [];
+  let acc = 0;
+  for (const row of rows) { offsets.push(acc); acc += row.length; }
+  return <div className={`matrix ${sudoku ? 'sudoku-board' : ''}`} role="grid" aria-label={sudoku ? 'Bảng Sudoku 9x9' : 'Bảng trạng thái'} style={{ '--columns': columns } as CSSProperties}>
     {state.columnLabels && <div className="matrix-row column-labels"><span/>{state.columnLabels.map((label, c) => <span key={c}>{label}</span>)}</div>}
-    {state.grid?.map((row, r) => <div className="matrix-row" key={r}>
+    {state.grid?.map((row, r) => <div className="matrix-row" role="row" key={r}>
       {state.rowLabels && <span className="row-label">{state.rowLabels[r]}</span>}
-      {row.map((value, c) => <div key={c} className={`grid-cell ${value === '*' ? 'blocked' : ''} ${cellClass(state, r * columns + c, action)} ${sudoku && c % 3 === 2 && c !== 8 ? 'box-right' : ''} ${sudoku && r % 3 === 2 && r !== 8 ? 'box-bottom' : ''}`} style={heatmap && typeof value === 'number' && value > 0 && !state.active?.includes(r * columns + c) && !state.marked?.includes(r * columns + c) && !state.path?.includes(r * columns + c) ? { backgroundColor: `rgba(55,139,188,${Math.min(.3, Math.log2(value + 1) * .045)})` } : undefined} aria-label={`Ô ${r + 1}, ${c + 1}: ${value}`}>
+      {row.map((value, c) => <div key={c} role="gridcell" className={`grid-cell ${value === '*' ? 'blocked' : ''} ${cellClass(state, offsets[r] + c, action)} ${sudoku && c % 3 === 2 && c !== row.length - 1 ? 'box-right' : ''} ${sudoku && r % 3 === 2 && r !== rows.length - 1 ? 'box-bottom' : ''}`} style={heatmap && typeof value === 'number' && value > 0 && !state.active?.includes(offsets[r] + c) && !state.marked?.includes(offsets[r] + c) && !state.path?.includes(offsets[r] + c) ? { backgroundColor: `rgba(55,139,188,${Math.min(.3, Math.log2(value + 1) * .045)})` } : undefined} aria-label={`Ô ${r + 1}, ${c + 1}: ${value}`}>
         {value === '*' ? '×' : sudoku && value === 'X' ? '·' : cellText(value)}
       </div>)}
     </div>)}
@@ -73,27 +79,69 @@ function Grid({ state, sudoku = false, heatmap = false, action }: { state: Visua
 }
 
 function Timeline({ state, action }: { state: VisualState; action?: SimulationEvent['action'] }) {
-  const items = state.intervals ?? [], min = Math.min(...items.map(p => p.start)), max = Math.max(...items.map(p => p.end));
+  const items = state.intervals ?? [];
+  if (!items.length) return <span className="empty-value">∅</span>;
+  const min = Math.min(...items.map(p => p.start)), max = Math.max(...items.map(p => p.end));
   return <div className="intervals">{items.map((p, i) => <div className={`interval-row ${cellClass(state, i, action)}`} key={i}>
     <span className="interval-index">{i + 1}</span><div className="interval-track"><div className="interval-bar" style={{ marginLeft: `${(p.start - min) / (max - min || 1) * 78}%`, width: `${Math.max(12, (p.end - p.start) / (max - min || 1) * 78)}%` }}>{p.start} → {p.end}</div></div><b>+{p.value}</b>
   </div>)}</div>;
 }
 
+function DecisionTree({ nodes }: { nodes: DecisionNode[] }) {
+  const LIMIT = 400;
+  const shown = nodes.slice(0, LIMIT);
+  const byId = new Map(shown.map(n => [n.id, n]));
+  const maxDepth = Math.max(0, ...shown.map(n => n.depth));
+  const levels = Array.from({ length: maxDepth + 1 }, (_, d) => shown.filter(n => n.depth === d));
+  // Mỗi nút giữ khoảng cách cố định thay vì co vào khung 560px — cây to thì cuộn
+  // ngang, và dùng chung thanh zoom ngoài của sân khấu.
+  const GAP = 64, ROW_H = 76, TOP = 30;
+  const perLevel = Math.max(1, ...levels.map(l => l.length));
+  const svgW = Math.max(560, perLevel * GAP);
+  const svgH = TOP + maxDepth * ROW_H + 34;
+  const pos = new Map<number, [number, number]>();
+  levels.forEach((level, d) => level.forEach((n, i) => pos.set(n.id, [(i + 1) * svgW / (level.length + 1), TOP + d * ROW_H])));
+  const at = (id: number): [number, number] => pos.get(id) ?? [svgW / 2, TOP];
+  return <div className="decision-tree-wrap">
+    <span className="data-label">Cây quyết định (quay lui)</span>
+    <div className="decision-scroll">
+      <svg className="decision-svg" width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} role="img" aria-label={`Cây quyết định ${shown.length} nút`}>
+        {shown.filter(n => n.parent !== null && byId.has(n.parent!)).map(n => {
+          const [x1, y1] = at(n.parent!), [x2, y2] = at(n.id);
+          return <line key={`e${n.parent}-${n.id}`} x1={x1} y1={y1 + 17} x2={x2} y2={y2 - 17}
+            className={n.status === 'pruned' ? 'd-edge pruned' : 'd-edge'} />;
+        })}
+        {shown.map(n => {
+          const [x, y] = at(n.id);
+          return <g key={n.id} transform={`translate(${x},${y})`} className={`d-node ${n.status}`}>
+            <circle r="17" />
+            <text textAnchor="middle" dominantBaseline="central">{n.label}</text>
+            {n.status === 'pruned' && <line x1="-12" y1="12" x2="12" y2="-12" className="d-cross" />}
+          </g>;
+        })}
+      </svg>
+    </div>
+    <div className="decision-legend"><span className="lg-current">Đang xét</span><span className="lg-accepted">Đã chọn</span><span className="lg-pruned">Cắt nhánh</span></div>
+    {nodes.length > LIMIT && <div className="decision-note">Cây quá lớn ({nodes.length} nút), chỉ hiện {LIMIT} nút đầu.</div>}
+  </div>;
+}
+
 function RulerView({ state }: { state: VisualState }) {
   const grid = state.grid;
-  if (!grid || grid.length === 0) return null;
+  if (!grid || grid.length === 0) return <span className="empty-value">∅ Chưa có vạch nào (h = 0).</span>;
   const rows = grid.length, cols = grid[0]?.length ?? 0;
+  if (!cols) return <span className="empty-value">∅</span>;
   const marks: (number | null)[] = Array(cols).fill(null);
   for (let c = 0; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
       const v = grid[r][c];
       if (typeof v === 'number' && v > 0) marks[c] = v;
-      else if (typeof v === 'string' && /^d+$/.test(v)) marks[c] = Number(v);
+      else if (typeof v === 'string' && /^\d+$/.test(v)) marks[c] = Number(v);
     }
   }
   const activeCols = new Set((state.active ?? []).map(idx => idx % cols));
   return (
-    <div className="ruler-wrap" aria-label="Mô hình cây thước">
+    <div className="ruler-wrap" role="img" aria-label="Mô hình cây thước">
       <div className="ruler-track">
         {marks.map((h, c) => (
           <div key={c} className={`ruler-tick ${h ? '' : 'empty'} ${activeCols.has(c) ? 'active' : ''}`} style={{ height: h ? `${(h / rows) * 100}%` : '6%' }}>
@@ -122,7 +170,7 @@ function LPView({ state, action, motion }: { state: VisualState; action?: Simula
     const from = prev.current;
     // Đỉnh mới bay ra từ tâm cụm đỉnh cũ (thay vì hiện đột ngột tại chỗ).
     // Đỉnh đầu tiên bay ra từ giữa khung nhìn.
-    const viewCenter = { x: (lp!.xmin + lp!.xmax) / 2, y: (lp!.ymin + lp!.ymax) / 2, z: 0 };
+    const viewCenter = lp ? { x: (lp.xmin + lp.xmax) / 2, y: (lp.ymin + lp.ymax) / 2, z: 0 } : { x: 0, y: 0, z: 0 };
     const center = from.length ? {
       x: from.reduce((s, v) => s + v.x, 0) / from.length,
       y: from.reduce((s, v) => s + v.y, 0) / from.length,
@@ -179,9 +227,9 @@ function LPView({ state, action, motion }: { state: VisualState; action?: Simula
     {poly.length >= 3 && lp.status !== 'infeasible' && <polygon points={poly.map(v => `${sx(v.x)},${sy(v.y)}`).join(' ')} className="lp-poly"/>}
     <line x1={sx(cx0)} y1={sy(cy0)} x2={sx(ax)} y2={sy(ay)} className="lp-gradient" markerEnd="url(#lp-arrow)"/>
     <defs><marker id="lp-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" className="lp-arrow-head"/></marker></defs>
-    {disp.map((v, i) => <g key={i} opacity={v.o} className={`lp-vertex ${i === lp.best ? 'best' : ''} ${state.active?.includes(i) ? 'active' : ''} ${action ? `a-${action}` : ''}`}>
+    {disp.map((v, i) => <g key={i} opacity={v.o} className={`lp-vertex ${i === lp.best ? 'best' : ''} ${state.active?.includes(i) ? 'active' : ''} ${state.marked?.includes(i) ? 'marked' : ''} ${state.path?.includes(i) ? 'path' : ''} ${action ? `a-${action}` : ''}`}>
       <circle cx={sx(v.x)} cy={sy(v.y)} r={i === lp.best ? 8 : 5.5}/>
-      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({lp.verts[i]?.x ?? Math.round(v.x * 10) / 10}, {lp.verts[i]?.y ?? Math.round(v.y * 10) / 10})</text>
+      <text x={sx(v.x) + 10} y={sy(v.y) - 8} className="lp-vertex-label">({Math.round((lp.verts[i]?.x ?? v.x) * 10000) / 10000}, {Math.round((lp.verts[i]?.y ?? v.y) * 10000) / 10000})</text>
     </g>)}
     {disp.length > 0 && (() => { const v = disp[disp.length - 1]; return <g key={lp.verts.length} transform={`translate(${sx(v.x)},${sy(v.y)})`} className="lp-ripple"><circle r="8"/></g>; })()}
     {lp.status !== 'optimal' && <text x={W / 2} y={P} textAnchor="middle" className="lp-status">{lp.status === 'infeasible' ? 'Vô nghiệm' : 'Không giới nội'}</text>}
@@ -190,7 +238,7 @@ function LPView({ state, action, motion }: { state: VisualState; action?: Simula
 
 function GraphView({ state }: { state: VisualState }) {
   const g = state.graph;
-  if (!g || g.nodes.length === 0) return null;
+  if (!g || g.nodes.length === 0) return <span className="empty-value">∅ Chưa có đồ thị.</span>;
   const W = 560, H = 420, P = 52;
   const xs = g.nodes.map(n => n.x), ys = g.nodes.map(n => n.y);
   let xmin = Math.min(...xs) - 1.2, xmax = Math.max(...xs) + 1.2, ymin = Math.min(...ys) - 1.2, ymax = Math.max(...ys) + 1.2;
@@ -284,7 +332,8 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
       <button className="zoom-btn" onClick={toggleFs} aria-label={fs ? vi.exitFullscreen : vi.fullscreen} title={fs ? vi.exitFullscreen : vi.fullscreen}>{fs ? <Shrink size={14}/> : <Expand size={14}/>}</button>
     </div>
     <div className="zoom-body" ref={bodyRef} style={{ zoom }}>
-      {state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }} action={action}/></div>}</>
+      {state.decision ? <><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/><DecisionTree nodes={state.decision} /></>
+        : state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String), active: state.active, marked: state.marked, path: state.path }} action={action}/></div>}</>
         : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
         : state.graph ? <GraphView state={state}/>
         : state.lp ? <LPView state={state} action={action} motion={motion}/>
@@ -293,9 +342,9 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
           ? <BarRow values={state.values ?? []} labels={state.labels} state={state} action={action} label={algorithm.id === 'truyvantong' ? 'tongTichLuy' : algorithm.id === 'tiem_sach' ? 'giaTriMax' : algorithm.id === 'do_an' ? 'tongTinChi' : algorithm.id === 'daycontangdainhat' || algorithm.id === 'daicontangdainhat2' ? 'Giá trị' : undefined}/>
           : <ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/>}
     </div></div>}
-    {state.secondary && (mode === '2d' || Boolean(state.grid) || Boolean(state.edges)) && <div className="secondary-visual"><span className="data-label">{state.secondaryLabel ?? 'Bảng phụ'}</span><ArrayRow values={state.secondary} state={{}} labels={algorithm.id === 'truyvantong' || algorithm.id === 'rut_bai_trung_thuong' ? state.secondary.map((_, i) => String(i)) : undefined} compact/></div>}
-    {mode === '3d' && state.secondary && !state.grid && !state.edges && <span className="scene-data-label">{state.secondaryLabel}</span>}
-    {mode === '3d' && state.edges && state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String) }}/></div>}
+    {state.secondary && (mode === '2d' || Boolean(state.grid) || Boolean(state.edges)) && <div className="secondary-visual"><span className="data-label">{state.secondaryLabel ?? 'Bảng phụ'}</span><ArrayRow values={state.secondary} state={state} labels={algorithm.id === 'truyvantong' || algorithm.id === 'rut_bai_trung_thuong' ? state.secondary.map((_, i) => String(i)) : undefined} compact action={action}/></div>}
+    {mode === '3d' && state.secondary && !state.grid && !state.edges && <div className="secondary-visual secondary-3d"><span className="scene-data-label">{state.secondaryLabel}</span><ArrayRow values={state.secondary} state={state} compact action={action}/></div>}
+    {mode === '3d' && state.edges && state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String), active: state.active, marked: state.marked, path: state.path }} action={action}/></div>}
     {isRecursive && !state.grid && <div className="recursion-path"><span className="data-label">Độ sâu</span>{Array.from({ length: Math.min(depth + 1, 21) }, (_, i) => <span className={i === depth ? 'current' : ''} key={i}>{i}</span>)}</div>}
     {algorithm.id === 'tinh-diem-mon-hoc' && state.variables?.canDuoi !== undefined && <div className="bounds"><span>Cận khả thi</span><b>{state.variables.canDuoi} … {state.variables.canTren}</b><span>Mục tiêu</span><b>{state.variables.tongThapNhat} … {state.variables.tongCaoNhat}</b></div>}
     {state.result && <div className="result-banner" data-testid="result"><CheckCheck size={18}/><span>Kết quả</span><pre>{state.result}</pre></div>}

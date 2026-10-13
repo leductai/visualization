@@ -33,19 +33,12 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     const s = Math.min(7.5 / spanX, 7.5 / spanZ);
     const midX = (lp.xmin + lp.xmax) / 2, midY = (lp.ymin + lp.ymax) / 2;
     const X = (x: number) => (x - midX) * s, Z = (y: number) => (y - midY) * s;
-    nodes.push({ key: 'lp-base', index: -1, label: '', caption: `Mặt phẳng X–Y · x ${lp.xmin.toFixed(1)}..${lp.xmax.toFixed(1)}`, position: [0, 0.09, 0], size: [spanX * s + 1, 0.18, spanZ * s + 1], color: '#e9e2d2', active: false });
-    // Trục X, Y (căn giữa khung nhìn) + số nguyên dọc trục để định hướng.
-    if (lp.ymin <= 0 && lp.ymax >= 0) nodes.push({ key: 'lp-axis-x', index: -1, label: '', caption: 'Trục X', position: [0, 0.21, Z(0)], size: [spanX * s, 0.06, 0.09], color: '#8a969e', active: false });
-    if (lp.xmin <= 0 && lp.xmax >= 0) nodes.push({ key: 'lp-axis-y', index: -1, label: '', caption: 'Trục Y', position: [X(0), 0.21, 0], size: [0.09, 0.06, spanZ * s], color: '#8a969e', active: false });
-    for (let v = Math.ceil(lp.xmin); v <= lp.xmax; v++) {
-      if (Math.abs(v) > 30) continue;
-      nodes.push({ key: `lp-nx${v}`, index: -1, label: String(v), caption: `x = ${v}`, position: [X(v), 0.2, Z(Math.max(lp.ymin, Math.min(lp.ymax, 0))) + 0.42], size: [0.44, 0.05, 0.34], color: '#f7ecd2', active: false });
-    }
-    for (let v = Math.ceil(lp.ymin); v <= lp.ymax; v++) {
-      if (v === 0 || Math.abs(v) > 30) continue;
-      nodes.push({ key: `lp-ny${v}`, index: -1, label: String(v), caption: `y = ${v}`, position: [X(Math.max(lp.xmin, Math.min(lp.xmax, 0))) - 0.42, 0.2, Z(v)], size: [0.44, 0.05, 0.34], color: '#f7ecd2', active: false });
-    }
-    // Mỗi ràng buộc là một thanh nối 2 đầu mút kẹp trong khung nhìn (ống trụ vẽ hướng bất kỳ).
+    const r4 = (v: number) => String(Math.abs(v) < 0.00005 ? 0 : Math.round(v * 10000) / 10000);
+    const statusText = lp.status === 'infeasible' ? ' · vô nghiệm' : lp.status === 'unbounded' ? ' · không giới nội'
+      : lp.best >= 0 && lp.verts[lp.best] ? ` · ★ (${r4(lp.verts[lp.best].x)}, ${r4(lp.verts[lp.best].y)}) Z=${r4(lp.verts[lp.best].z)}` : '';
+    nodes.push({ key: 'lp-base', index: -1, label: '', caption: `Mặt phẳng X–Y · x ${r4(lp.xmin)}..${r4(lp.xmax)} · y ${r4(lp.ymin)}..${r4(lp.ymax)}${statusText}`, position: [0, 0.09, 0], size: [spanX * s + 1, 0.18, spanZ * s + 1], color: '#e9e2d2', active: false });
+    // Bỏ trục + 4 nhãn mép: chúng chiếm chỗ mà không giúp đọc đỉnh/Z.
+    // Xem thang đo chi tiết ở bản 2D; hover vào đế vẫn thấy đầy đủ bounds.
     const clip = (a: number, b: number, c: number): [number, number, number, number] | null => {
       let x1: number, y1: number, x2: number, y2: number;
       if (Math.abs(b) >= Math.abs(a)) { x1 = lp.xmin; y1 = (c - a * x1) / b; x2 = lp.xmax; y2 = (c - a * x2) / b; }
@@ -62,23 +55,42 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
       const segm = clip(L.a, L.b, L.c);
       if (!segm) return;
       const [x1, y1, x2, y2] = segm;
+      // Đầu mút to hơn để đường ràng buộc nhìn thấy được; nhãn R{i} treo cao khỏi mặt đế.
       for (const [tag, px, py] of [['a', x1, y1], ['b', x2, y2]] as const) {
-        nodes.push({ key: `lp-l${i}${tag}`, index: -1, label: `R${i + 1}`, caption: `R${i + 1}: ${L.raw}`, position: [X(px), 0.26, Z(py)], size: [0.4, 0.16, 0.4], color: '#7d8a92', active: false });
+        nodes.push({ key: `lp-l${i}${tag}`, index: -1, label: '', caption: `R${i + 1}: ${L.raw}`, position: [X(px), 0.24, Z(py)], size: [0.26, 0.14, 0.26], color: '#5b6b75', active: false });
       }
       links.push({ from: `lp-l${i}a`, to: `lp-l${i}b`, highlighted: false });
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      nodes.push({ key: `lp-l${i}m`, index: -1, label: `R${i + 1}`, caption: `R${i + 1}: ${L.raw} (miền nghiệm là phía a·x+b·y ≤ c)`, position: [X(mx), 0.62, Z(my)], size: [0.95, 0.3, 0.55], color: '#fdf6e3', active: false });
     });
+    // Tấm nền miền nghiệm: gom các đỉnh lại thành một khối dễ nhìn thay vì
+    // phải tự nối các đường R mờ trong đầu.
+    if (lp.verts.length >= 3) {
+      const xs = lp.verts.map(v => X(v.x)), zs = lp.verts.map(v => Z(v.y));
+      const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+      nodes.push({
+        key: 'lp-area', index: -1, label: 'Miền nghiệm',
+        caption: `Miền nghiệm · ${lp.verts.length} đỉnh${lp.best >= 0 && lp.verts[lp.best] ? ` · tốt nhất Đ${lp.best + 1} Z=${r4(lp.verts[lp.best].z)}` : ''}`,
+        position: [cx, 0.16, cz],
+        size: [Math.max(1, Math.max(...xs) - Math.min(...xs) + 1.1), 0.1, Math.max(1, Math.max(...zs) - Math.min(...zs) + 1.1)],
+        color: '#cfe8da', active: false,
+      });
+    }
     const cx0 = lp.verts.length ? lp.verts.reduce((t, v) => t + v.x, 0) / lp.verts.length : midX;
     const cy0 = lp.verts.length ? lp.verts.reduce((t, v) => t + v.y, 0) / lp.verts.length : midY;
     const order = lp.verts.map((_, i) => i).sort((p, q) => Math.atan2(lp.verts[p].y - cy0, lp.verts[p].x - cx0) - Math.atan2(lp.verts[q].y - cy0, lp.verts[q].x - cx0));
+    // Cột Z: nhãn ngắn (Đ1, ★Đ2) để chữ to đọc được; tọa độ đầy đủ nằm ở caption/hover.
+    // Cột tốt nhất màu vàng gold, cao hẳn để nhìn là biết ngay.
+    const zs = lp.verts.map(v => v.z), zmin = Math.min(...zs), zspan = Math.max(...zs) - Math.min(...zs);
     lp.verts.forEach((v, i) => {
       const isBest = i === lp.best, isActive = state.active?.includes(i) ?? false;
-      const h = isBest ? 1.15 : 0.32;
+      const h = lp.verts.length > 1 ? 0.5 + 1.3 * ((v.z - zmin) / (zspan || 1)) : 0.8;
       nodes.push({
-        key: `lp-v${i}`, index: i, label: `(${v.x}, ${v.y})`,
-        caption: `Đỉnh ${i + 1} (${v.x}, ${v.y}) · Z = ${v.z}${isBest ? ' · tối ưu' : ''}`,
-        position: [X(v.x), 0.18 + h / 2 + (isActive ? 0.42 : 0), Z(v.y)],
-        size: [0.52, h, 0.52],
-        color: isActive ? activeColor : isBest ? '#259b7c' : state.marked?.includes(i) ? '#f0c999' : '#3b7dbf',
+        key: `lp-v${i}`, index: i, label: isBest ? `★Đ${i + 1}` : `Đ${i + 1}`,
+        caption: `Đỉnh ${i + 1} (${r4(v.x)}, ${r4(v.y)}) · Z = ${r4(v.z)}${isBest ? ' · tối ưu' : ''}`,
+        position: [X(v.x), 0.2 + h / 2 + (isActive ? 0.42 : 0), Z(v.y)],
+        size: [0.95, h, 0.95],
+        color: isActive ? activeColor : isBest ? '#d99a22' : state.marked?.includes(i) ? '#f0c999' : '#3b7dbf',
         active: isActive,
       });
     });
@@ -86,11 +98,40 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
       const a = order[k], b = order[(k + 1) % order.length];
       if (a !== b) links.push({ from: `lp-v${a}`, to: `lp-v${b}`, highlighted: true });
     }
-    const gn = Math.hypot(lp.cx, lp.cy) || 1, reach = Math.max(spanX, spanZ) * 0.22;
+    const gn = Math.hypot(lp.cx, lp.cy) || 1, reach = Math.max(spanX, spanZ) * 0.3;
     const tx = cx0 + lp.cx / gn * reach, ty = cy0 + lp.cy / gn * reach;
-    nodes.push({ key: 'lp-origin', index: -1, label: 'Z', caption: `Hướng tăng Z (${lp.cx}, ${lp.cy})`, position: [X(cx0), 0.3, Z(cy0)], size: [0.5, 0.24, 0.5], color: '#c0392b', active: false });
-    nodes.push({ key: 'lp-tip', index: -1, label: '→', caption: `Hướng tăng Z (${lp.cx}, ${lp.cy})`, position: [X(tx), 0.3, Z(ty)], size: [0.5, 0.24, 0.5], color: '#e9a390', active: false });
+    const dirWord = lp.sense === 'max' ? 'MAX→' : 'MIN→';
+    // Mũi tên mục tiêu treo cao trên các cột để không bị che; nhãn cực ngắn.
+    nodes.push({ key: 'lp-origin', index: -1, label: 'Z', caption: `Hàm mục tiêu Z = ${r4(lp.cx)}x+${r4(lp.cy)}y (${lp.sense}) — đi theo mũi tên thì Z ${lp.sense === 'max' ? 'tăng' : 'giảm'}`, position: [X(cx0), 2.1, Z(cy0)], size: [0.9, 0.32, 0.6], color: '#c0392b', active: false });
+    nodes.push({ key: 'lp-tip', index: -1, label: dirWord, caption: `Hướng Z ${lp.sense === 'max' ? 'tăng' : 'giảm'} (${r4(lp.cx)}, ${r4(lp.cy)})`, position: [X(tx), 2.1, Z(ty)], size: [1.1, 0.32, 0.6], color: '#e9a390', active: false });
     links.push({ from: 'lp-origin', to: 'lp-tip', highlighted: true });
+    return { nodes, links };
+  }
+  if (state.decision && state.decision.length > 0 && state.decision.length <= 350) {
+    // Cây quyết định quay lui: xếp theo tầng sâu, hiểu ngay nhánh nào đang đi / cắt.
+    const shown = state.decision.slice(0, 350);
+    const maxDepth = Math.max(0, ...shown.map(n => n.depth));
+    const byDepth = Array.from({ length: maxDepth + 1 }, (_, d) => shown.filter(n => n.depth === d));
+    const PX = (i: number, total: number) => (i - (total - 1) / 2) * 1.5;
+    const PZ = (d: number) => (d - maxDepth / 2) * 1.9;
+    for (let d = 0; d <= maxDepth; d++) {
+      byDepth[d].forEach((n, i) => {
+        const current = n.status === 'current';
+        nodes.push({
+          key: `d-${n.id}`, index: n.id, label: n.label,
+          caption: n.parent === null ? 'Gốc cây quyết định' : `Nút ${n.label} · tầng ${n.depth}${n.status === 'pruned' ? ' · đã cắt' : n.status === 'current' ? ' · đang xét' : ' · đã chọn'}`,
+          position: [PX(i, byDepth[d].length), 0.45 + (current ? 0.42 : 0), PZ(d)],
+          size: n.parent === null ? [0.7, 0.3, 0.7] : [0.85, 0.55, 0.85],
+          color: n.status === 'current' ? activeColor : n.status === 'accepted' ? '#8bcbb9' : n.status === 'pruned' ? '#e9a390' : '#e2e8eb',
+          active: current,
+        });
+      });
+    }
+    for (const n of shown) {
+      if (n.parent !== null && shown.some(m => m.id === n.parent)) {
+        links.push({ from: `d-${n.parent}`, to: `d-${n.id}`, highlighted: n.status === 'accepted' || n.status === 'current' });
+      }
+    }
     return { nodes, links };
   }
   if (state.graph && state.graph.nodes.length > 0) {

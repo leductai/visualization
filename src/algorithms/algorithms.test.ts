@@ -225,7 +225,7 @@ describe('custom input parsers', () => {
   });
   it('rejects malformed input with a Vietnamese message', () => {
     expect(() => findAlgorithm('sinh-hoan-vi').parseInput('')).toThrow();
-    expect(() => findAlgorithm('sinh-hoan-vi').parseInput('3 4')).toThrow();
+    expect(() => findAlgorithm('sinh-hoan-vi').parseInput('3 3')).toThrow();
     expect(() => findAlgorithm('dia-chi-ip').parseInput('abc')).toThrow();
     expect(() => findAlgorithm('sudoku').parseInput('1 2 3')).toThrow();
     expect(() => findAlgorithm('tiem_sach').parseInput('2 5\n1')).toThrow();

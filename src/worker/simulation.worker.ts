@@ -12,7 +12,8 @@ self.onmessage = async ({ data }: MessageEvent<WorkerCommand>) => {
       runner = new SimulationRunner(algorithm.simulate(data.input));
       return;
     }
-    if (busy || !runner) return;
+    if (!runner) { self.postMessage({ type: 'error', message: 'Mô phỏng chưa sẵn sàng, hãy thử lại.' } satisfies WorkerResponse); return; }
+    if (busy) return;
     busy = true;
     self.postMessage(runner.next(data.count, data.detail) satisfies WorkerResponse);
   } catch (error) {

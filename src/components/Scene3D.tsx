@@ -24,7 +24,13 @@ export default function Scene3D({ algorithm, state, action, step, runKey, motion
     setSpinning(false); setHover('');
     return () => { scene.current?.dispose(); scene.current = null; };
   }, [algorithm.id, runKey, motion]);
-  useEffect(() => { scene.current?.update(buildSceneModel(algorithm, state, action), true, step); }, [algorithm, state, action, step]);
+  useEffect(() => {
+    try {
+      scene.current?.update(buildSceneModel(algorithm, state, action), true, step);
+    } catch { fallback.current(); }
+  }, [algorithm, state, action, step]);
+  let srNodes: { key: string; caption: string }[] = [];
+  try { srNodes = buildSceneModel(algorithm, state, action).nodes; } catch { srNodes = []; }
   return <div className="scene-3d" data-testid="scene-3d">
     <div className="scene-host" ref={host}/>
     <div className="scene-tools" role="group" aria-label={vi.cameraControls}>
@@ -40,6 +46,6 @@ export default function Scene3D({ algorithm, state, action, step, runKey, motion
       <button className="icon-button" aria-label={vi.sceneNext} title={vi.sceneNext} disabled={!playback.canNext || playback.playing} onClick={() => void playback.next()}><SkipForward size={16}/></button>
       <button className="icon-button scene-play" aria-label={playback.playing ? vi.scenePause : vi.scenePlay} title={playback.playing ? vi.scenePause : vi.scenePlay} disabled={!playback.canNext} onClick={playback.toggle}>{playback.playing ? <Pause size={16}/> : <Play size={16}/>}</button>
     </div>
-    <ol className="sr-only" aria-label={vi.sceneData}>{buildSceneModel(algorithm, state, action).nodes.map(node => <li key={node.key}>{node.caption}</li>)}</ol>
+    <ol className="sr-only" aria-label={vi.sceneData}>{srNodes.map(node => <li key={node.key}>{node.caption}</li>)}</ol>
   </div>;
 }

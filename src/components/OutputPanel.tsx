@@ -17,11 +17,13 @@ export function OutputPanel({ count, runKey, read, seek }: { count: number; runK
     void read(offset, Math.min(VISIBLE, count - offset)).then(rows => { if (active) setRecords(rows); }).catch(e => { if (active) setError(String(e)); });
     return () => { active = false; };
   }, [count, offset, runKey, read]);
-  return <section className="output-panel"><div className="panel-heading"><span><ListOrdered size={16}/> Kết quả xuất</span><span>{count.toLocaleString('vi-VN')} kết quả</span></div>
+  const tail = Math.max(0, count - offset - records.length);
+  return <section className="output-panel" aria-label="Kết quả xuất"><div className="panel-heading"><span><ListOrdered size={16}/> Kết quả xuất</span><span>{count.toLocaleString('vi-VN')} kết quả</span></div>
     {error && <p className="warning" role="alert">{error}</p>}
-    <div className="output-viewport" ref={viewport} onScroll={e => { const target = e.currentTarget; setOffset(Math.floor(target.scrollTop / ROW_HEIGHT)); follow.current = target.scrollTop + target.clientHeight >= target.scrollHeight - ROW_HEIGHT; }}>
+    <div className="output-viewport" ref={viewport} role="log" aria-live="polite" aria-label="Danh sách kết quả" onScroll={e => { const target = e.currentTarget; setOffset(Math.floor(target.scrollTop / ROW_HEIGHT)); follow.current = target.scrollTop + target.clientHeight >= target.scrollHeight - ROW_HEIGHT; }}>
       {count === 0 ? <div className="output-empty">Chưa có kết quả</div> : <div style={{ height: count * ROW_HEIGHT, position: 'relative' }}><div style={{ position: 'absolute', top: offset * ROW_HEIGHT, width: '100%' }}>
-        {records.map((record, i) => <button className="output-row" key={`${offset + i}-${record.step}`} onClick={() => void seek(record.step)} title={record.text || 'Kết quả rỗng'}><small>{offset + i + 1}</small><code>{record.text.replaceAll('\n', ' / ') || '∅'}</code><span>Bước {record.step}</span></button>)}
+        {records.map((record, i) => <button className="output-row" key={`${offset + i}-${record.step}`} onClick={() => void seek(record.step)} title={record.text || 'Kết quả rỗng'} aria-label={`Kết quả ${offset + i + 1}: ${record.text.replaceAll('\n', ' / ') || 'rỗng'} tại bước ${record.step}`}><small>{offset + i + 1}</small><code>{record.text.replaceAll('\n', ' / ') || '∅'}</code><span>Bước {record.step}</span></button>)}
+        {tail > 0 && <div aria-hidden="true" style={{ height: tail * ROW_HEIGHT }} />}
       </div></div>}
     </div>
   </section>;
