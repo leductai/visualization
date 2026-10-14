@@ -1,4 +1,5 @@
 import type { Algorithm, Cell, SimulationEvent, VisualState } from '../../engine/types';
+import { mapColor } from '../graphColors';
 
 export type Point = [number, number, number];
 export interface SceneNode { key: string; index: number; label: string; caption: string; position: Point; size: Point; color: string; active: boolean; }
@@ -146,25 +147,34 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     const GX = (x: number) => (x - gmidX) * gs, GZ = (y: number) => (y - gmidY) * gs;
     const curEdge = state.active?.[0];
     const curEnds = curEdge !== undefined && gp.edges[curEdge] ? [gp.edges[curEdge].u, gp.edges[curEdge].v] : [];
+    const mapFill = (id: number) => {
+      const c = gp.colors?.[id] ?? 0;
+      return c > 0 ? mapColor(c) : undefined;
+    };
     gp.nodes.forEach(n => {
       const hot = curEnds.includes(n.id);
       const tree = (state.marked ?? []).some(k => gp.edges[k] && (gp.edges[k].u === n.id || gp.edges[k].v === n.id));
+      const fill = mapFill(n.id);
+      const mc = gp.colors?.[n.id] ?? 0;
       nodes.push({
-        key: `g-n${n.id}`, index: n.id, label: String(n.id + 1), caption: `${n.label} · đỉnh ${n.id + 1}`,
+        key: `g-n${n.id}`, index: n.id, label: fill ? n.label : String(n.id + 1),
+        caption: `${n.label} · đỉnh ${n.id + 1}${mc > 0 ? ` · màu ${mc}` : ''}`,
         position: [GX(n.x), 0.45 + (hot ? 0.42 : 0), GZ(n.y)], size: [0.72, 0.6, 0.72],
-        color: hot ? activeColor : tree ? '#8bcbb9' : palette.base, active: hot,
+        color: hot ? activeColor : fill ?? (tree ? '#8bcbb9' : palette.base), active: hot,
       });
     });
     gp.edges.forEach((e, k) => {
       const a = gp.nodes.find(n => n.id === e.u)!, b = gp.nodes.find(n => n.id === e.v)!;
       const chosen = e.status === 'chosen' || gp.best.includes(k);
       const hot = curEdge === k;
-      nodes.push({
-        key: `g-e${k}`, index: -1, label: String(e.w),
-        caption: `Cạnh ${k + 1}: ${a.label}–${b.label} · w=${e.w}${chosen ? ' · trong cây' : ''}${e.status === 'skipped' ? ' · đã bỏ' : ''}`,
-        position: [(GX(a.x) + GX(b.x)) / 2, 0.16, (GZ(a.y) + GZ(b.y)) / 2], size: [0.55, 0.14, 0.4],
-        color: hot ? activeColor : chosen ? '#259b7c' : e.status === 'skipped' ? '#d3dbdf' : '#f7ecd2', active: false,
-      });
+      if (!gp.hideWeights) {
+        nodes.push({
+          key: `g-e${k}`, index: -1, label: String(e.w),
+          caption: `Cạnh ${k + 1}: ${a.label}–${b.label} · w=${e.w}${chosen ? ' · trong cây' : ''}${e.status === 'skipped' ? ' · đã bỏ' : ''}`,
+          position: [(GX(a.x) + GX(b.x)) / 2, 0.16, (GZ(a.y) + GZ(b.y)) / 2], size: [0.55, 0.14, 0.4],
+          color: hot ? activeColor : chosen ? '#259b7c' : e.status === 'skipped' ? '#d3dbdf' : '#f7ecd2', active: false,
+        });
+      }
       links.push({ from: `g-n${e.u}`, to: `g-n${e.v}`, highlighted: chosen || hot });
     });
     return { nodes, links };

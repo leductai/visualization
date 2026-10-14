@@ -1,0 +1,34 @@
+BÀI TOÁN TÔ MÀU BẢN ĐỒ (THAM LAM WELSH-POWELL)
+
+Giả sử ta có bản đồ các quốc gia trên thế giới, ta muốn tô màu các quốc gia này sao cho 2 nước có cùng ranh giới được tô khác màu nhau. Hãy tô màu sao cho số màu sử dụng là ít (tham lam: xét đỉnh bậc giảm dần, mỗi đỉnh tô màu nhỏ nhất còn trống với đỉnh kề đã tô).
+
+LƯU Ý: tham lam nhanh nhưng KHÔNG đảm bảo số màu ít nhất (bài toán tô màu tối thiểu là NP-khó). Muốn tối thiểu thật phải quay lui thử m = 1, 2, ...
+
+Input:
+
+Dòng đầu tiên chứa hai số nguyên n và m: số đỉnh và số ranh giới (cạnh).
+Dòng thứ hai chứa n nhãn đỉnh phân biệt.
+m dòng tiếp theo, mỗi dòng chứa một ranh giới a b (đồ thị vô hướng).
+
+Output:
+
+Dòng đầu là số màu đã dùng. Dòng sau liệt kê màu từng đỉnh theo thứ tự input (dạng NhãnMàu, ví dụ A1 B2 C3).
+
+Ví dụ:
+
+Input:
+```text
+4 5
+A B C D
+A B
+B C
+C A
+A D
+B D
+```
+
+Output:
+```text
+3
+A1 B2 C3 D3
+```

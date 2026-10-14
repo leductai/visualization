@@ -26,6 +26,12 @@ import { sapHang2d } from './sap-hang-2d';
 import { giaiThua } from './giai-thua';
 import { hoanViChen } from './hoan-vi-chen';
 import { duongNganNhat } from './duong-ngan-nhat';
+import { fibonacci } from './fibonacci';
+import { dayConCach1 } from './day-con-cach-1';
+import { datNgoac } from './dat-ngoac';
+import { nhanChuoiMaTran } from './nhan-chuoi-ma-tran';
+import { toMau } from './to-mau';
+import { chonHoatDong } from './chon-hoat-dong';
 
 export const algorithms = [
   sinhHoanVi,
@@ -56,6 +62,12 @@ export const algorithms = [
   giaiThua,
   hoanViChen,
   duongNganNhat,
+  fibonacci,
+  dayConCach1,
+  datNgoac,
+  nhanChuoiMaTran,
+  toMau,
+  chonHoatDong,
 ];
 
 export const findAlgorithm = (id: string) => algorithms.find(a => a.id === id) ?? algorithms[0];

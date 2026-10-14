@@ -16,9 +16,9 @@ function run(id: string, input: any) {
 }
 
 describe('registry and event contract', () => {
-  it('contains all 28 modules', () => {
-    expect(algorithms).toHaveLength(28);
-    expect(new Set(algorithms.map(a => a.id)).size).toBe(28);
+  it('contains all 34 modules', () => {
+    expect(algorithms).toHaveLength(34);
+    expect(new Set(algorithms.map(a => a.id)).size).toBe(34);
     for (const a of algorithms) {
       expect(a.source).toContain('int main()'); expect(a.pseudocode.length).toBeGreaterThan(0);
       expect(a.presets.length).toBeGreaterThanOrEqual(2);
@@ -175,6 +175,84 @@ describe('backtracking semantics', () => {
     expect(run('duong-ngan-nhat', d.presets[2].input).outputs).toEqual(['A', '0']);
     expect(d.validate({ labels: ['A', 'B'], edges: [{ u: 0, v: 1, w: -1 }], start: 'A', end: 'B' })).not.toBeNull();
   });
+  it('computes Fibonacci top-down with a binary call tree', () => {
+    expect(run('fibonacci', { n: 6 }).outputs).toEqual(['8']);
+    expect(run('fibonacci', { n: 0 }).outputs).toEqual(['0']);
+    expect(run('fibonacci', { n: 1 }).outputs).toEqual(['1']);
+    expect(run('fibonacci', { n: 10 }).outputs).toEqual(['55']);
+  });
+  it('finds longest subsequence with adjacent difference 1', () => {
+    expect(run('day-con-cach-1', { values: [9, 8, 3, 4, 3, 7, 5] }).outputs).toEqual(['3\n3 4 3']);
+    expect(run('day-con-cach-1', { values: [2, 2, 2] }).outputs).toEqual(['1\n2']);
+    expect(run('day-con-cach-1', { values: [] }).outputs).toEqual(['0\n']);
+    const { state } = run('day-con-cach-1', { values: [9, 8, 3, 4, 3, 7, 5] });
+    const chain = state.path ?? [];
+    expect(chain.length).toBe(3);
+    for (let i = 1; i < chain.length; i++) {
+      expect(chain[i]).toBeGreaterThan(chain[i - 1]);
+      expect(Math.abs([9, 8, 3, 4, 3, 7, 5][chain[i]] - [9, 8, 3, 4, 3, 7, 5][chain[i - 1]])).toBe(1);
+    }
+  });
+  it('parenthesizes expressions for maximum value', () => {
+    expect(run('dat-ngoac', { values: [1, 2, 3, 4], ops: ['+', 'x', '+'] }).outputs).toEqual([
+      '21', '((1 + 2) x (3 + 4))',
+    ]);
+    expect(run('dat-ngoac', { values: [6, 0, 6], ops: ['+', 'x'] }).outputs).toEqual([
+      '36', '((6 + 0) x 6)',
+    ]);
+    expect(run('dat-ngoac', { values: [0.1, 0.1, 0.1], ops: ['x', '+'] }).outputs).toEqual([
+      '0.11', '((0.1 x 0.1) + 0.1)',
+    ]);
+    expect(run('dat-ngoac', { values: [5], ops: [] }).outputs).toEqual(['5', '5']);
+    expect(findAlgorithm('dat-ngoac').parseInput('1+2*3').ops).toEqual(['+', 'x']);
+  });
+  it('orders matrix chain multiplication optimally', () => {
+    expect(run('nhan-chuoi-ma-tran', { dims: [30, 35, 15, 5, 10, 20, 25] }).outputs).toEqual([
+      '15125', '((A1 x (A2 x A3)) x ((A4 x A5) x A6))',
+    ]);
+    expect(run('nhan-chuoi-ma-tran', { dims: [10, 20, 30] }).outputs).toEqual(['6000', '(A1 x A2)']);
+    expect(run('nhan-chuoi-ma-tran', { dims: [5, 7] }).outputs).toEqual(['0', 'A1']);
+  });
+  it('colors maps greedily (Welsh-Powell)', () => {
+    const t = findAlgorithm('to-mau');
+    const valid = (input: any, coloring: string) => {
+      const parts = coloring.split(' ');
+      expect(parts).toHaveLength(input.labels.length);
+      for (const e of input.edges) {
+        const cu = parts[e.u].slice(input.labels[e.u].length), cv = parts[e.v].slice(input.labels[e.v].length);
+        expect(parts[e.u].startsWith(input.labels[e.u])).toBe(true);
+        expect(cu).not.toBe(cv);
+      }
+    };
+    expect(run('to-mau', t.presets[0].input).outputs).toEqual(['3', 'A1 B2 C3 D3']);
+    expect(run('to-mau', t.presets[1].input).outputs).toEqual(['4', 'A1 B2 C3 D4']);
+    expect(run('to-mau', t.presets[2].input).outputs).toEqual(['2', 'A1 B2 C1 D2']);
+    expect(run('to-mau', t.presets[0].input).state.graph?.colors).toEqual([1, 2, 3, 3]);
+    expect(run('to-mau', t.presets[3].input).state.graph?.colors).toEqual([1, 1, 2, 1, 2, 3, 2, 2]);
+    for (const p of t.presets) valid(p.input, run('to-mau', p.input).outputs[1]);
+    // Phản ví dụ: tham lam tốn 3 màu trong khi brute-force chỉ cần 2.
+    const g = run('to-mau', t.presets[3].input);
+    expect(g.outputs[0]).toBe('3');
+    const { labels, edges } = t.presets[3].input as { labels: string[]; edges: { u: number; v: number }[] };
+    const adj: number[][] = labels.map(() => []);
+    for (const e of edges) { adj[e.u].push(e.v); adj[e.v].push(e.u); }
+    const color = Array(labels.length).fill(0);
+    const dfs = (v: number, m: number): boolean => {
+      if (v === labels.length) return true;
+      for (let c = 1; c <= m; c++) {
+        if (adj[v].every(u => color[u] !== c)) { color[v] = c; if (dfs(v + 1, m)) return true; color[v] = 0; }
+      }
+      return false;
+    };
+    expect(dfs(0, 2)).toBe(true);
+  });
+  it('selects activities greedily with half-open compatibility', () => {
+    expect(run('chon-hoat-dong', { acts: [{ start: 1, end: 3 }, { start: 2, end: 4 }, { start: 3, end: 5 }] }).outputs).toEqual(['2', '1 3']);
+    expect(run('chon-hoat-dong', { acts: [{ start: 5, end: 9 }] }).outputs).toEqual(['1', '1']);
+    // Chạm biên vẫn tương thích (khác Đồ án dùng end < start nghiêm ngặt).
+    const { state } = run('chon-hoat-dong', { acts: [{ start: 1, end: 2 }, { start: 2, end: 3 }] });
+    expect(state.path).toEqual([0, 1]);
+  });
   it('enumerates binary strings in 0-then-1 DFS order', () => {
     expect(run('liet-ke-nhi-phan', { n: 3 }).outputs).toEqual([
       '000', '001', '010', '011', '100', '101', '110', '111',
@@ -297,6 +375,12 @@ describe('custom input parsers', () => {
     'sap-hang-2d': '5\nA 1 1\nB 2 3\nC 3 2\nD 4 4\nE 5 0',
     'giai-thua': '5',
     'hoan-vi-chen': '4 3 1 2',
+    'fibonacci': '6',
+    'day-con-cach-1': '7\n9 8 3 4 3 7 5',
+    'dat-ngoac': '1+2×3+4',
+    'nhan-chuoi-ma-tran': '30 35 15 5 10 20 25',
+    'to-mau': '4 5\nA B C D\nA B\nB C\nC A\nA D\nB D',
+    'chon-hoat-dong': '3\n1 3\n2 4\n3 5',
     'duong-ngan-nhat': '6 10\nA B C D E F\nA B 4\nA C 2\nB C 1\nC B 1\nB D 5\nC D 8\nC E 10\nD E 2\nD F 6\nE F 3\nA F',
   };
   it('every module parses the documented stdin format', () => {

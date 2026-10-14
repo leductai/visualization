@@ -22,6 +22,12 @@ import sapHang2d from '../../webcode2/sap_hang_2d.md?raw';
 import giaiThua from '../../webcode/giai-thua.txt?raw';
 import hoanViChen from '../../webcode/hoan-vi-chen.txt?raw';
 import duongNganNhat from '../../webcode2/duong_ngan_nhat.md?raw';
+import fibonacci from '../../webcode2/fibonacci.md?raw';
+import dayConCach1 from '../../webcode2/day_con_cach_1.md?raw';
+import datNgoac from '../../webcode2/dat_ngoac.md?raw';
+import nhanChuoiMaTran from '../../webcode2/nhan_chuoi_ma_tran.md?raw';
+import toMau from '../../webcode/to-mau.txt?raw';
+import chonHoatDong from '../../webcode2/chon_hoat_dong.md?raw';
 
 /** Đề bài gốc theo id thuật toán. 4 bài (vach-thuoc, quy-hoach-tuyen-tinh,
  *  cay-khung-nho-nhat, day-con-chung-dai-nhat) chưa có file đề nên App dùng
@@ -51,4 +57,10 @@ export const statements: Record<string, string> = {
   'giai-thua': giaiThua,
   'hoan-vi-chen': hoanViChen,
   'duong-ngan-nhat': duongNganNhat,
+  'fibonacci': fibonacci,
+  'day-con-cach-1': dayConCach1,
+  'dat-ngoac': datNgoac,
+  'nhan-chuoi-ma-tran': nhanChuoiMaTran,
+  'to-mau': toMau,
+  'chon-hoat-dong': chonHoatDong,
 };

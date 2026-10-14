@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { CheckCheck, Expand, Maximize2, Pause, Play, RotateCcw, Shrink, X, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Algorithm, Cell, DecisionNode, SimulationEvent, VisualState } from '../engine/types';
+import { mapColor, textOnMapColor } from './graphColors';
 import type { LPVertex } from '../engine/types';
 import { vi } from '../i18n/vi';
 import type { ScenePlayback } from './Scene3D';
@@ -287,7 +288,9 @@ function GraphView({ state }: { state: VisualState }) {
   const curEnds = cur !== undefined && g.edges[cur] ? [g.edges[cur].u, g.edges[cur].v] : [];
   const inTree = new Set(state.marked ?? []);
   const directed = Boolean(g.directed);
-  return <svg className="graph-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={directed ? 'Đồ thị có hướng' : 'Đồ thị vô hướng có trọng số'}>
+  const hasMapColors = Array.isArray(g.colors);
+  const usedColors = [...new Set((g.colors ?? []).filter(c => c > 0))].sort((a, b) => a - b);
+  return <><svg className="graph-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={directed ? 'Đồ thị có hướng' : 'Đồ thị vô hướng có trọng số'}>
     <defs>
       <marker id="g-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="#9fb0ba"/></marker>
       <marker id="g-arrow-hi" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 z" fill="#139d84"/></marker>
@@ -305,7 +308,7 @@ function GraphView({ state }: { state: VisualState }) {
       const mx = (lx1 + lx2) / 2, my = (ly1 + ly2) / 2;
       return <g key={k} className={`g-edge ${cls} ${cur === k ? 'active' : ''}`}>
         <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} markerEnd={directed ? (hi ? 'url(#g-arrow-hi)' : 'url(#g-arrow)') : undefined}/>
-        <text x={mx} y={my - 7} className="g-weight">{e.w}</text>
+        {!g.hideWeights && <text x={mx} y={my - 7} className="g-weight">{e.w}</text>}
       </g>;
     })}
     {g.nodes.map(n => {
@@ -313,12 +316,14 @@ function GraphView({ state }: { state: VisualState }) {
       const named = n.label !== String(n.id + 1);
       const hot = curEnds.includes(n.id);
       const tree = [...inTree].some(k => g.edges[k] && (g.edges[k].u === n.id || g.edges[k].v === n.id));
+      const mapFill = hasMapColors && (g.colors?.[n.id] ?? 0) > 0 ? mapColor(g.colors![n.id]) : undefined;
       return <g key={n.id} transform={`translate(${x},${y})`} className={`g-node ${hot ? 'active' : ''} ${tree ? 'in-tree' : ''}`}>
-        <circle r="17"/><text textAnchor="middle" dominantBaseline="central" className="g-id">{n.id + 1}</text>
-        {named && <text textAnchor="middle" y="32" className="g-name">{n.label}</text>}
+        <circle r="17" style={mapFill ? { fill: mapFill } : undefined}/><text textAnchor="middle" dominantBaseline="central" className="g-id" style={mapFill ? { fill: textOnMapColor(mapFill) } : undefined}>{hasMapColors ? n.label : n.id + 1}</text>
+        {named && !hasMapColors && <text textAnchor="middle" y="32" className="g-name">{n.label}</text>}
       </g>;
     })}
-  </svg>;
+  </svg>
+  {hasMapColors && usedColors.length > 0 && <div className="map-legend" aria-label="Chú giải màu">{usedColors.map(c => <span key={c}><i style={{ background: mapColor(c) }} />Màu {c}</span>)}</div>}</>;
 }
 
 export function VisualStage({ algorithm, state, mode, motion, step, action, runKey, onFallback, playback, total, onSeek }: {
@@ -333,10 +338,17 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
   const clampZoom = (v: number) => Math.min(2.5, Math.max(0.25, Math.round(v * 20) / 20));
   const fitToScreen = useCallback(() => {
     const el = bodyRef.current;
-    if (!el?.parentElement) return;
-    const natural = el.scrollWidth / (Number(el.style.zoom) || 1);
-    const avail = el.parentElement.clientWidth;
-    if (natural > 0 && avail > 0) setZoom(z => (natural > avail + 4 ? clampZoom(avail / natural) : z));
+    const stage = el?.closest('.visual-stage') as HTMLElement | null;
+    if (!el || !stage) return;
+    const z = Number(el.style.zoom) || 1;
+    const naturalW = el.scrollWidth / z, naturalH = el.scrollHeight / z;
+    if (!naturalW || !naturalH) return;
+  const caption = stage.firstElementChild as HTMLElement | null;
+  const availW = el.parentElement?.clientWidth ?? 0;
+  const availH = stage.clientHeight - (caption?.offsetHeight ?? 0) - 56;
+    if (availW <= 0 || availH <= 0) return;
+    const fit = Math.min(availW / naturalW, availH / naturalH);
+    if (fit < 1 - 1e-3) setZoom(clampZoom(fit));
   }, []);
   useEffect(() => {
     setZoom(1);
@@ -368,7 +380,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
     : algorithm.category === 'Chia để trị' ? `CHIA ĐỂ TRỊ · ĐỆ QUY`
     : algorithm.category === 'Giảm để trị' ? `GIẢM ĐỂ TRỊ · ĐỆ QUY`
     : algorithm.category === 'Sinh' ? `SINH · LIỆT KÊ`
-    : algorithm.category === 'Tối ưu' ? (algorithm.kind === 'graph' ? 'TỐI ƯU · ĐỒ THỊ' : `TỐI ƯU · ĐỒ THỊ X–Y`)
+    : algorithm.category === 'Tối ưu' ? (algorithm.kind === 'graph' ? 'TỐI ƯU · ĐỒ THỊ' : algorithm.kind === 'timeline' ? 'TỐI ƯU · THỜI GIAN' : `TỐI ƯU · ĐỒ THỊ X–Y`)
     : algorithm.category === 'Quy hoạch động' ? `QUY HOẠCH ĐỘNG · BẢNG DP`
     : algorithm.kind === 'tree' ? 'CÂY GỐC 1' : algorithm.kind === 'timeline' ? 'DỰ ÁN / THỜI GIAN' : algorithm.kind === 'grid' ? 'BẢNG TRẠNG THÁI' : algorithm.kind === 'string' ? 'PHÂN ĐOẠN' : 'CẤU TRÚC DỮ LIỆU';
   return <div ref={stageRef} className={`visual-stage visual-${algorithm.kind} ${mode === '3d' ? 'immersive-stage' : ''}`} data-testid="visual-stage" data-action={action}>
@@ -384,7 +396,7 @@ export function VisualStage({ algorithm, state, mode, motion, step, action, runK
     <div className="zoom-body" ref={bodyRef} style={{ zoom }}>
       {state.decision && !state.graph ? <><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/><DecisionTree nodes={state.decision} /></>
         : state.edges ? <><Tree state={state} action={action}/>{state.grid && <div className="ancestor-table"><span className="data-label">cha[v][k]</span><Grid state={{ grid: state.grid, columnLabels: state.columnLabels, rowLabels: state.values?.map(String), active: state.active, marked: state.marked, path: state.path }} action={action}/></div>}</>
-        : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">tongTinChi</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
+        : state.intervals ? <><Timeline state={state} action={action}/><span className="data-label">{state.valuesLabel ?? 'tongTinChi'}</span><ArrayRow values={state.values ?? []} state={state} compact action={action}/></>
         : state.graph ? <><GraphView state={state}/>{state.decision && <DecisionTree nodes={state.decision}/>}</>
         : state.lp ? <LPView state={state} action={action} motion={motion}/>
         : state.points ? <><ScatterView state={state}/><ArrayRow values={state.values ?? []} labels={state.labels} state={state} action={action}/></>
