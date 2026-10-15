@@ -10,4 +10,3 @@ tools/build_report/.venv/
 __pycache__/
 *.pyc
 
-dist-single/
