@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Algorithm, Detail, SimulationEvent, VisualState, WorkerResponse } from './types';
+import type { Algorithm, Detail, SimulationEvent, VisualState, WorkerCommand, WorkerResponse } from './types';
 import { History, type Frame } from './history';
+import { SimulationRunner } from '../worker/runner';
+// Inline worker (blob) để chạy được cả http(s) lẫn file:// (bản singlefile double-click).
+// Vite sẽ inline file này vào bundle, không còn fetch file .js rời nên không dính CORS file://.
+// Lưu ý: Chrome vẫn chặn blob-worker khi mở bằng file:// (Refused cross-origin redirects),
+// nên bên dưới có fallback chạy trực tiếp trên main-thread khi Worker lỗi.
+import SimulationWorker from '../worker/simulation.worker.ts?worker&inline';
+
+type Backend = { postMessage: (cmd: WorkerCommand) => void; terminate: () => void };
 
 type ConsoleEntry = { explanation: string; step: number; action: SimulationEvent['action']; timestamp: number };
 
@@ -27,7 +35,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
   const [warning, setWarning] = useState(''), [version, setVersion] = useState(0), [ready, setReady] = useState(false);
   const [consoleHistory, setConsoleHistory] = useState<ConsoleEntry[]>([]);
   const [isBusy, setIsBusy] = useState(false);
-  const worker = useRef<Worker | null>(null), history = useRef<History | null>(null);
+  const worker = useRef<Backend | null>(null), history = useRef<History | null>(null);
   const busy = useRef(false), position = useRef(0), length = useRef(0), outputLength = useRef(0);
   const loggedUpTo = useRef(0);
   const current = useRef(state), finished = useRef(false), cancelled = useRef(false), generation = useRef(0);
@@ -65,16 +73,7 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
     };
     const validation = algorithm.validate(input);
     if (validation) { fail(validation); return () => { ++generation.current; void h.close(); }; }
-    let w: Worker;
-    try { w = new Worker(new URL('../worker/simulation.worker.ts', import.meta.url), { type: 'module' }); }
-    catch (error) { fail(String(error)); return () => { ++generation.current; void h.close(); }; }
-    worker.current = w;
-    w.postMessage({ type: 'init', id: algorithm.id, input, detail: detailRef.current });
-    void h.open().then(() => {
-      if (token === generation.current && !cancelled.current) { setWarning(h.warning); busy.current = false; setReady(true); }
-    });
-    w.onerror = e => fail(e.message || 'Worker không thể tiếp tục.');
-    w.onmessage = async ({ data }: MessageEvent<WorkerResponse>) => {
+    const handleBatch = async (data: WorkerResponse) => {
       if (token !== generation.current || cancelled.current) return;
       if (data.type === 'error') { fail(data.message); return; }
       try {
@@ -119,7 +118,57 @@ export function usePlayer(algorithm: Algorithm, preset: number, customInput: any
       } catch (error) { fail(error instanceof Error ? error.message : String(error)); }
       if (token === generation.current) { busy.current = false; setIsBusy(false); }
     };
-    return () => { ++generation.current; w.terminate(); void h.close().catch(() => undefined); };
+    // Fallback main-thread cho file:// (Chrome chặn blob-worker) hoặc CSP chặn Worker.
+    // Chạy cùng SimulationRunner ngay trên UI, không cần Worker riêng.
+    let fellBack = false;
+    const startFallback = () => {
+      if (fellBack || token !== generation.current) return;
+      fellBack = true;
+      try {
+        const runner = new SimulationRunner(algorithm.simulate(input));
+        const fake: Backend = {
+          postMessage: (cmd: WorkerCommand) => {
+            if (token !== generation.current || cancelled.current) return;
+            if (cmd.type === 'init') return;
+            try {
+              void handleBatch(runner.next(cmd.count, cmd.detail));
+            } catch (error) { fail(error instanceof Error ? error.message : String(error)); }
+          },
+          terminate: () => undefined,
+        };
+        worker.current?.terminate();
+        worker.current = fake;
+        busy.current = false; setIsBusy(false); setReady(true);
+      } catch (error) { fail(error instanceof Error ? error.message : String(error)); }
+    };
+    const openHistory = () => {
+      void h.open().then(() => {
+        if (token === generation.current && !cancelled.current) { setWarning(h.warning); busy.current = false; setReady(true); }
+      });
+    };
+    // Mở file:// thì khỏi thử Worker (chắc chắn bị chặn), vào thẳng fallback cho sạch console.
+    if (typeof location !== 'undefined' && location.protocol === 'file:') {
+      startFallback();
+      openHistory();
+      return () => { ++generation.current; worker.current?.terminate(); worker.current = null; void h.close().catch(() => undefined); };
+    }
+    let w: Worker;
+    try { w = new SimulationWorker(); }
+    catch { startFallback(); openHistory(); return () => { ++generation.current; worker.current?.terminate(); worker.current = null; void h.close().catch(() => undefined); }; }
+    const backend: Backend = {
+      postMessage: (cmd: WorkerCommand) => w.postMessage(cmd),
+      terminate: () => w.terminate(),
+    };
+    worker.current = backend;
+    w.postMessage({ type: 'init', id: algorithm.id, input, detail: detailRef.current });
+    openHistory();
+    w.onerror = () => {
+      // Lần đầu lỗi (thường là file:// chặn blob-worker) thì fallback, không fail UI.
+      if (!fellBack) { startFallback(); return; }
+      fail('Worker không thể tiếp tục.');
+    };
+    w.onmessage = ({ data }: MessageEvent<WorkerResponse>) => { void handleBatch(data); };
+    return () => { ++generation.current; w.terminate(); if (worker.current === backend) worker.current = null; void h.close().catch(() => undefined); };
   }, [algorithm, preset, customInput, version, applyFrame, logEvent]);
 
   const renderStored = useCallback(async (index: number) => {

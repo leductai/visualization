@@ -21,7 +21,7 @@ function labelTexture(label: string) {
 export function createScene(host: HTMLElement, initial: SceneModel, reducedMotion: boolean, onHover: (caption: string) => void, onFailure: () => void) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75)); renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.type = THREE.PCFShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   const darkScene = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark';
   const clearColor = darkScene ? '#10171b' : '#f0f5f7';

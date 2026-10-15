@@ -4,3 +4,10 @@ test-results/
 playwright-report/
 .dev-server/
 *.tsbuildinfo
+
+# Python venv cho cong cu build bao cao
+tools/build_report/.venv/
+__pycache__/
+*.pyc
+
+dist-single/

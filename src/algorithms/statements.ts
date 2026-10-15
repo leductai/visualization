@@ -28,10 +28,12 @@ import datNgoac from '../../webcode2/dat_ngoac.md?raw';
 import nhanChuoiMaTran from '../../webcode2/nhan_chuoi_ma_tran.md?raw';
 import toMau from '../../webcode/to-mau.txt?raw';
 import chonHoatDong from '../../webcode2/chon_hoat_dong.md?raw';
+import vachThuoc from '../../webcode2/vach_thuoc.md?raw';
+import quyHoachTuyenTinh from '../../webcode2/quy_hoach_tuyen_tinh.md?raw';
+import cayKhungNhoNhat from '../../webcode2/cay_khung_nho_nhat.md?raw';
+import dayConChungDaiNhat from '../../webcode2/day_con_chung_dai_nhat.md?raw';
 
-/** Đề bài gốc theo id thuật toán. 4 bài (vach-thuoc, quy-hoach-tuyen-tinh,
- *  cay-khung-nho-nhat, day-con-chung-dai-nhat) chưa có file đề nên App dùng
- *  nội dung dự phòng dựng từ metadata. */
+/** Đề bài gốc theo id thuật toán, đọc từ file đề trong `webcode/` và `webcode2/`. */
 export const statements: Record<string, string> = {
   'tro-choi-ghep-chu': troChoiGhepChu,
   'tinh-diem-mon-hoc': tinhDiemMonHoc,
@@ -63,4 +65,8 @@ export const statements: Record<string, string> = {
   'nhan-chuoi-ma-tran': nhanChuoiMaTran,
   'to-mau': toMau,
   'chon-hoat-dong': chonHoatDong,
+  'vach-thuoc': vachThuoc,
+  'quy-hoach-tuyen-tinh': quyHoachTuyenTinh,
+  'cay-khung-nho-nhat': cayKhungNhoNhat,
+  'day-con-chung-dai-nhat': dayConChungDaiNhat,
 };

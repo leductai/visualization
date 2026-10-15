@@ -2,6 +2,14 @@
 
 Ứng dụng React + TypeScript + Vite trực quan hóa 34 thuật toán từ `webcode/` và `webcode2/`. Mã C++ được nhập nguyên bản để tham khảo; bộ mô phỏng TypeScript chạy trong Web Worker.
 
+## Giấy phép
+
+Dự án phát hành theo **Educational Use and Share-Alike License (EUSAL) 1.0** — giấy phép tùy chỉnh, không phải giấy phép mã nguồn mở. Xem toàn văn trong [`LICENSE`](LICENSE).
+
+Phạm vi cho phép: mọi cách sử dụng, sao chép, sửa đổi, dịch thuật và phân phối đều chỉ dành cho **mục đích giáo dục phi thương mại** (giảng dạy, học tập, nghiên cứu và đồ án học thuật), kể cả với tổ chức không thuộc trường đại học. Khi phân phối bản sửa đổi, cần kèm nguyên văn giấy phép này, giữ nguyên thông báo bản quyền, ghi rõ phần đã sửa, công bố mã nguồn tương ứng và cấp phép lại theo chính EUSAL 1.0.
+
+Mọi hình thức sử dụng thương mại đều bị cấm nếu không có văn bản cho phép riêng của chủ sở hữu bản quyền. Phần mềm được cung cấp nguyên trạng, không kèm bảo đảm.
+
 ## Chạy ứng dụng
 
 ```sh

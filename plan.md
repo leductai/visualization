@@ -1,9 +1,13 @@
 # Algorithm Visualizer Web Plan
 
-## Implementation progress (2026-10-05)
+## Implementation progress (2026-10-14)
 
-- [x] Read and compare all 16 C++ programs and the existing React scaffold.
-- [x] Register all 16 modules with Vietnamese content, presets, validation, and lazy simulators.
+Ban đầu dự án nhắm 16 bài trong `webcode/` và `webcode2/`. Sau đó bổ sung thêm các bài ngoài
+phạm vi ban đầu, hiện registry có **34 bài** (xem `src/algorithms/index.ts`). Danh sách 16 bài
+ở mục "Module inventory" bên dưới giữ nguyên như ghi chép gốc, không còn là toàn bộ phạm vi.
+
+- [x] Read and compare all C++ programs and the existing React scaffold.
+- [x] Register all modules with Vietnamese content, presets, validation, and lazy simulators.
 - [x] Preserve output order, strict LIS/interval comparisons, rolling edit rows, Fenwick operations, DFS/LCA and backtracking undo events.
 - [x] Correct the score scaling and mines boundary defect; document differences from unsafe C++ behavior.
 - [x] Provide responsive array/string/grid/tree/timeline views, Sudoku conflicts, DP heatmap, and recursion depth/bounds.
@@ -11,13 +15,16 @@
 - [x] Highlight and scroll to current C++/pseudocode lines; reset clears highlighting.
 - [x] Persist per-run frames/results in IndexedDB with bounded memory fallback, explicit storage errors and virtualized output.
 - [x] Add simulator/replay/mapping/registry tests and desktop/mobile browser tests, including accessibility checks.
+- [x] Add 2D/3D view switch with Three.js scene, camera controls and graphics fallback to 2D.
+- [x] Add fullscreen playback, theme switch and reduced-motion support.
+- [x] Provide original problem statements for every module (4 bài cuối được viết bổ sung trong `webcode2/`).
 - [ ] Follow-up: extract remaining inline Vietnamese interface labels and semantic explanations into localization resources.
 - [ ] Follow-up: split grouped simulator/content files into per-module directories and expand the recursion-depth view into a full decision tree.
 
 The implementation currently stores a complete serializable frame at each viewed step for direct seeking. Sparse checkpoints plus event patches are a future storage optimization. Browser smoke tests target Chromium; other browser engines have not been verified yet.
 
 ## Context and decisions
-- The existing project contains 16 C++ programs with paired Vietnamese statements: 8 in `webcode/` and 8 in `webcode2/`; there is no web scaffold.
+- The existing project contains C++ programs with paired Vietnamese statements: 8 in `webcode/` and 8 in `webcode2/`; there is no web scaffold.
 - Build a new client-side React + TypeScript + Vite application. No accounts, backend, or server execution in MVP.
 - Reimplement each existing algorithm as a TypeScript simulator that emits semantic execution events. Preserve the C++ source as reference and provide Vietnamese pseudocode mapped to the same event/code lines; do not execute arbitrary C++ in the browser.
 - UI is Vietnamese-first, with labels/content isolated in resources for future English localization.
@@ -74,7 +81,7 @@ Implement one registry entry and simulator/visualizer adapter per module:
 - Test worker cancellation, pause/resume, lazy continuation, timeline seek/checkpoint restore, IndexedDB unavailable/full behavior, and no main-thread blocking on large presets.
 - Component/integration-test each visualizer’s core transitions and empty/failure/success states.
 - Run TypeScript typecheck, lint, unit tests, production build, and a responsive/accessibility smoke test in desktop and mobile viewports.
-- Verify all 16 registry entries are reachable, have source/pseudocode/presets, and render without crashing; add a registry completeness test to prevent future omissions.
+- Verify all registry entries are reachable, have source/pseudocode/presets, and render without crashing; add a registry completeness test to prevent future omissions.
 
 ## Out of scope for MVP
 - Executing arbitrary user-supplied C++ or compiling C++ to WebAssembly.
