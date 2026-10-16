@@ -2,7 +2,7 @@ import type { Algorithm, Cell, SimulationEvent, VisualState } from '../../engine
 import { mapColor } from '../graphColors';
 
 export type Point = [number, number, number];
-export interface SceneNode { key: string; index: number; label: string; caption: string; position: Point; size: Point; color: string; active: boolean; }
+export interface SceneNode { key: string; index: number; label: string; caption: string; position: Point; size: Point; color: string; active: boolean; steady?: boolean; }
 export interface SceneLink { from: string; to: string; highlighted: boolean; }
 export interface SceneModel { nodes: SceneNode[]; links: SceneLink[]; }
 
@@ -241,7 +241,8 @@ export function buildSceneModel(algorithm: Algorithm, state: VisualState, action
     const activeCols = new Set((state.active ?? []).map(i => ((i % cols) + cols) % cols));
     const L = cols - 1;
     const baseTop = 0.22, backEdge = -1.5;
-    nodes.push({ key: 'ruler-base', index: -1, label: '', caption: `Thước dài ${L} · ${rows} tầng`, position: [0, 0.11, 0.2], size: [cols * 1.02 + 0.5, 0.22, 3.4], color: '#deb86a', active: false });
+    // Đế thước đứng yên khi hover (steady): nâng lên sẽ che các vạch mỏng nằm trên mặt.
+    nodes.push({ key: 'ruler-base', index: -1, label: '', caption: `Thước dài ${L} · ${rows} tầng`, position: [0, 0.11, 0.2], size: [cols * 1.02 + 0.5, 0.22, 3.4], color: '#deb86a', active: false, steady: true });
     for (let c = 0; c < cols; c++) {
       const mark = marks[c], isActive = activeCols.has(c);
       // Vạch nằm dẹt trên mặt thước, dài theo độ cao như thước thật (không dựng đứng).

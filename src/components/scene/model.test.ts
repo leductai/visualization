@@ -30,6 +30,12 @@ describe('3D scene data', () => {
     const count = (state: typeof initial) => buildSceneModel(ip, state).nodes.filter(n => n.key.startsWith('value-')).length;
     expect(count(initial)).toBe(4); expect(count({ ...initial, values: ['255'] })).toBe(4);
   });
+  it('keeps the ruler base steady so hover never covers the ticks', () => {
+    const ruler = findAlgorithm('vach-thuoc');
+    const model = buildSceneModel(ruler, ruler.initial(ruler.presets[0].input));
+    expect(model.nodes.find(n => n.key === 'ruler-base')?.steady).toBe(true);
+    expect(model.nodes.filter(n => n.key.startsWith('tick-')).every(n => !n.steady)).toBe(true);
+  });
   it('highlights actual LCA path edges', () => {
     const tree = findAlgorithm('nguoi_giao_com'), state = tree.initial(tree.presets[0].input);
     const model = buildSceneModel(tree, { ...state, path: [3, 1, 0, 2, 6] });

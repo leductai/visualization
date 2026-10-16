@@ -136,7 +136,7 @@ export function createScene(host: HTMLElement, initial: SceneModel, reducedMotio
     let moving = false; const blend = reducedMotion ? 1 : 1 - Math.exp(-delta * 11);
     const targetColor = new THREE.Color();
     actors.forEach(actor => {
-      const hoverOffset = hovered === actor ? .13 : 0, target = actor.target.clone(); target.y += hoverOffset;
+      const hoverOffset = hovered === actor && !actor.descriptor.steady ? .13 : 0, target = actor.target.clone(); target.y += hoverOffset;
       if (actor.group.position.distanceTo(target) > .002 || actor.body.scale.distanceTo(actor.scale) > .002) moving = true;
       actor.group.position.lerp(target, blend); actor.body.scale.lerp(actor.scale, blend);
       targetColor.set(actor.descriptor.color);
